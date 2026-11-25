@@ -93,12 +93,14 @@ function item(id){return cards().find(x=>x[0]===id)}
 function expected(){let r=config();return r.initial.map(x=>x[0]===r.old?r.next:x[0])}
 function announce(s){$('live').textContent=s}
 function cat(id){return cats.find(c=>c.id===id)}
+const INTRO=['Study the assignment details shown on this screen, then hide them.','Hold and drag each block to the tray that matches its purpose. Leave unrelated blocks on the workbench.','Keep an eye on this screen: the assignment may change while you work.'];
 const kick=(n,l)=>`Challenge ${n} of 3 · ${l}`;
 const REFLECT='How could meaningful organization and removal of irrelevant information help you study? Why would better performance not establish an increase in working-memory capacity?';
 
 /* ---------- Flow ---------- */
 function resetRound(){blocks={};state.phase='study';state.assigned={};state.selected=null;state.updated=false;state.order=shuffle(cards().map(x=>x[0]));state.strategy=null;drag=null;hover=null}
-function reset(){state.round=0;state.results=[];state.seen=[];resetRound();render();announce('Session restarted. Challenge 1: study the details on the monitor.')}
+function reset(){state.round=0;state.results=[];state.seen=[];resetRound();state.phase='intro';render();announce('Session restarted. Read the instructions on the monitor, then select Start.')}
+function start(){state.phase='study';render();announce('Challenge 1: study the assignment details on the monitor.')}
 function begin(){state.phase='recall';spawnBlocks();render();announce('Instructions hidden. The blocks fall onto the workbench. Move the ones that match the assignment into the trays.')}
 function evaluate(){syncMembership();if(!state.updated){state.updated=true;render();announce('New message on the monitor: '+config().notice+' Review your arrangement, then check it.');return}
   let exp=expected(),ids=Object.keys(state.assigned),correct=ids.filter(id=>exp.includes(id)),organized=correct.filter(id=>state.assigned[id]===item(id)[2]);
@@ -107,7 +109,7 @@ function evaluate(){syncMembership();if(!state.updated){state.updated=true;rende
 function advance(){if(state.round===0){state.round=1;resetRound();announce('Challenge 2: study the next assignment on the monitor.')}else{blocks={};state.round=2;state.phase='decision';state.selected=null;state.updated=false;state.strategy=null;state.order=R3_ORDER.slice();spawnBlocks();announce('Challenge 3: choose an intervention on the monitor.')}render()}
 function chooseStrategy(id){state.strategy=id;if(!state.seen.includes(id))state.seen.push(id);applyStrategy();render();announce(strategies.find(s=>s.id===id).feedback)}
 function finish(){state.phase='report';render();announce('Session report on the monitor.')}
-const ACTIONS={begin,evaluate,advance,finish,again:reset};
+const ACTIONS={start,begin,evaluate,advance,finish,again:reset};
 
 /* ---------- Accessible mirror of the monitor (collapsed under the workbench) ---------- */
 function reportData(){let a=state.results[0],b=state.results[1],d=b.organized-a.organized;
@@ -116,7 +118,8 @@ function reportData(){let a=state.results[0],b=state.results[1],d=b.organized-a.
     seen:'Interventions explored: '+(state.seen.map(id=>strategies.find(s=>s.id===id).title).join(', ')||'none')+'.'}}
 function renderAlt(){let node=$('altContent'),focusId=document.activeElement&&node.contains(document.activeElement)?document.activeElement.id:null,h='';
   const B=(label,act,o={})=>`<button type="button" id="alt-act-${act}" data-act="${act}" class="${o.primary?'primary':''}" ${o.pressed!=null?`aria-pressed="${o.pressed}"`:''} ${o.disabled?'disabled':''}>${esc(label)}</button>`;
-  if(state.phase==='study'){h=`<p><strong>${kick(state.round+1,config().title)}.</strong> Details shown on the monitor:</p>`+(state.round===0?`<ul>${config().initial.map(x=>`<li>${esc(x[1])}</li>`).join('')}</ul>`:cats.map(c=>`<p><strong>${c.label}:</strong> ${config().initial.filter(x=>x[2]===c.id).map(x=>esc(x[1])).join(', ')}</p>`).join(''))+`<div class="alt-btns">${B('Hide details & start','begin',{primary:1})}</div>`}
+  if(state.phase==='intro'){h=`<p><strong>How it works.</strong> ${INTRO.join(' ')}</p><div class="alt-btns">${B('Start','start',{primary:1})}</div>`}
+  else if(state.phase==='study'){h=`<p><strong>${kick(state.round+1,config().title)}.</strong> Details shown on the monitor:</p>`+(state.round===0?`<ul>${config().initial.map(x=>`<li>${esc(x[1])}</li>`).join('')}</ul>`:cats.map(c=>`<p><strong>${c.label}:</strong> ${config().initial.filter(x=>x[2]===c.id).map(x=>esc(x[1])).join(', ')}</p>`).join(''))+`<div class="alt-btns">${B('Hide details & start','begin',{primary:1})}</div>`}
   else if(state.phase==='recall'){h=`<p>Choose a place for each block. Leave unrelated details on the workbench.</p>${state.updated?`<p><strong>Deadline update:</strong> ${esc(config().notice)}</p>`:''}<div class="alt-grid">${state.order.map(id=>`<label for="alt-${id}">${esc(item(id)[1])}<select id="alt-${id}" data-id="${id}"><option value="" ${!state.assigned[id]?'selected':''}>Workbench</option>${cats.map(c=>`<option value="${c.id}" ${state.assigned[id]===c.id?'selected':''}>${c.label}</option>`).join('')}</select></label>`).join('')}</div><div class="alt-btns">${B('Check arrangement','evaluate',{primary:1})}</div>`}
   else if(state.phase==='feedback'){let s=state.results[state.round];h=`<p>${s.selected}/6 correct details, ${s.organized}/6 correctly organized, ${s.incorrect} incorrect selections, deadline updated: ${s.update?'yes':'no'}. Results describe this task only, not your cognitive capacity.</p>`+cats.map(c=>`<p><strong>${c.label}:</strong> ${expected().map(id=>item(id)).filter(x=>x[2]===c.id).map(x=>esc(x[1])).join(', ')}</p>`).join('')+`<div class="alt-btns">${B(state.round===0?'Next challenge':'Explore strategies','advance',{primary:1})}</div>`}
   else if(state.phase==='decision'){let s=strategies.find(x=>x.id===state.strategy);h=`<p>How would you improve your workspace?</p><div class="alt-btns">${strategies.map(x=>B(x.title,'s:'+x.id,{pressed:state.strategy===x.id})).join('')}</div>${s?`<p>${esc(s.feedback)}</p>`:''}<div class="alt-btns">${B('View results','finish',{primary:1,disabled:!s})}</div>`}
@@ -128,7 +131,7 @@ function renderAlt(){let node=$('altContent'),focusId=document.activeElement&&no
 function runAction(act){if(act.startsWith('s:'))chooseStrategy(act.slice(2));else ACTIONS[act]?.()}
 function render(){renderAlt();screenDirty=true}
 
-$('restart').onclick=()=>{if(state.phase==='study'&&state.round===0||confirm('Restart and clear this session?'))reset()};
+$('restart').onclick=()=>{if((state.phase==='study'||state.phase==='intro')&&state.round===0||confirm('Restart and clear this session?'))reset()};
 const stageEl=document.querySelector('.u3d-stage'),fsBtn=$('fs');
 fsBtn.onclick=()=>{if(document.fullscreenElement){document.exitFullscreen();return}let req=stageEl.requestFullscreen||stageEl.webkitRequestFullscreen,p=null;try{p=req&&req.call(stageEl)}catch(e){p=null}if(!req)window.open(location.href,'_blank');else if(p&&p.catch)p.catch(()=>window.open(location.href,'_blank'))};
 document.addEventListener('fullscreenchange',()=>{let on=document.fullscreenElement===stageEl;stageEl.classList.toggle('u3d-fs-on',on);fsBtn.textContent=on?'Exit full screen':'Full screen'});
@@ -231,6 +234,9 @@ function groupedGrid(list,y0,sw,yb,fs,pad,mark){if(DRY)return;let gap=fs*.6,tw=s
 function notesH(fs,grouped){return grouped?fs*(tall?7.6:5.9):fs*(tall?7.8:5.0)}
 function screenMode(){return state.phase==='recall'?'recall':state.phase}
 const LAYOUTS={
+  intro(sw,sh,fs,pad){let tw=sw-2*pad,y=heading('Cognitive Workspace · How it works','Your task',sw,fs,pad)+fs*.5;
+    INTRO.forEach((t,i)=>{let r=fs*.78,cx=pad+r,cy=y+fs*.72;if(!DRY){ctx.fillStyle='#104f6d';ctx.beginPath();ctx.arc(cx,cy,r,0,7);ctx.fill()}T(String(i+1),cx,cy+.5,{size:fs*.85,color:'#fff',weight:700});y=para(t,pad+fs*2.2,y,tw-fs*2.2,fs*.95,'#33444f',500,3)+fs*.55});
+    T('3 short challenges · No time limit',pad,y+fs*1.3,{size:fs*.8,color:'#677884',weight:500,align:'left'});return actionRow('Start','start',y+fs*.2,sw,fs,pad)+pad},
   study(sw,sh,fs,pad){let g=state.round===1,y=heading(kick(state.round+1,config().title),g?'Prepare your next academic assignment.':'Prepare your academic assignment.',sw,fs,pad),nh=notesH(fs,g);
     (g?groupedGrid:flatGrid)(config().initial,y+fs*.5,sw,y+fs*.5+nh,fs,pad);y+=fs*.5+nh+fs*.8;
     if(!tall)T('Study at your own pace.',pad,y+fs*1.15,{size:fs*.8,color:'#677884',weight:500,align:'left'});return actionRow('Hide details & start','begin',y,sw,fs,pad)+pad},
@@ -341,7 +347,7 @@ function syncMeshes(){for(const id in meshes)if(!blocks[id]){rig.remove(meshes[i
   let db=drag?.moved?blocks[drag.id]:null;ghost.visible=!!db;if(db){let sup=supportUnder(db,db.x,db.z,db.y);ghost.scale.set(db.w,BH,db.d);ghost.position.set(db.x,sup+BH/2,db.z)}
   let neutral=neutralTrays(),hot=db?trayAt(db.x,db.z):null;
   trayObjs.forEach(o=>{let col=neutral?0x9aa9b2:new THREE.Color(o.c.color).getHex();o.walls.forEach(w=>{w.material.color.setHex(col);w.material.emissive.setHex(0xffffff);w.material.emissiveIntensity=hot===o.c?.25:0});o.base.material.color.set(neutral?'#e9eef1':o.c.light);o.label.visible=!neutral})}
-function neutralTrays(){return state.round===0&&state.phase==='study'}
+function neutralTrays(){return state.round===0&&(state.phase==='study'||state.phase==='intro')}
 
 /* ---------- Camera ---------- */
 function fitCamera(){let w=view.clientWidth,h=view.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}
@@ -385,13 +391,13 @@ function animate(now){requestAnimationFrame(animate);if(!running)return;let dt=l
   step(dt/2);step(dt/2);if(!drag?.moved)syncMembership();syncMeshes();if(screenDirty)paintScreen();placeCamera();renderer.render(scene,camera)}
 
 function init(){
-  if(!window.THREE){$('fallback').hidden=false;resetRound();render();return}
-  try{renderer=new THREE.WebGLRenderer({canvas:cv,antialias:true});}catch(err){$('fallback').hidden=false;resetRound();render();return}
+  if(!window.THREE){$('fallback').hidden=false;resetRound();state.phase='intro';render();return}
+  try{renderer=new THREE.WebGLRenderer({canvas:cv,antialias:true});}catch(err){$('fallback').hidden=false;resetRound();state.phase='intro';render();return}
   renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
   scene=new THREE.Scene();scene.fog=new THREE.FogExp2(0x0b0a26,.0009);camera=new THREE.PerspectiveCamera(38,1,.1,3000);ray=new THREE.Raycaster();ndc=new THREE.Vector2();
   buildSpace();buildRig();fitCamera();new ResizeObserver(fitCamera).observe(view);
   new IntersectionObserver(en=>{running=en[0].isIntersecting;last=0},{threshold:.01}).observe(view);
-  resetRound();render();requestAnimationFrame(animate)}
+  resetRound();state.phase='intro';render();requestAnimationFrame(animate)}
 init();
 </script>
 </body>
