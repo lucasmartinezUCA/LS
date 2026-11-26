@@ -46,6 +46,11 @@ html,body{margin:0;padding:0;background:transparent;font-family:"DM Sans",Arial,
 #plab .screen{width:840px;height:444px;background:#f7f9fa;color:var(--text);font-size:16px;line-height:1.45;display:flex;flex-direction:column;border-radius:3px}
 #plab .glue.enlarged{transform:none!important;left:0;top:0;width:100%;height:100%;padding-top:50px;background:#e9eff2;z-index:7;border-radius:14px}
 #plab .glue.enlarged.peek{width:calc(100% - 190px);border-radius:14px 0 0 14px}
+#plab .toast{position:absolute;right:16px;bottom:16px;z-index:9;display:flex;align-items:center;gap:10px;background:#16222b;color:#eef4f7;border-radius:14px;padding:10px 12px;box-shadow:0 10px 28px #0006;font-size:.86rem;max-width:min(360px,90%)}
+#plab .toast div{display:flex;flex-direction:column;line-height:1.3}
+#plab .toast b{font-size:.9rem}
+#plab .toast .ti{font-size:1.3rem}
+#plab .toast button{border:0;border-radius:8px;background:#ffffff26;color:#fff;font-weight:700;padding:5px 9px}
 #plab .peeklabel{position:absolute;right:0;top:50px;width:190px;z-index:7;text-align:center;font-size:.74rem;font-weight:700;color:var(--title);background:#ffffffd9;padding:5px 4px;pointer-events:none}
 #plab .glue.enlarged .screen{width:100%;height:100%}
 #plab .stage.flat .screen{width:100%;max-width:900px;height:auto;min-height:420px}
@@ -184,7 +189,7 @@ html,body{margin:0;padding:0;background:transparent;font-family:"DM Sans",Arial,
     <button type="button" id="fsBtn">Full screen</button>
   </div>
   <div class="cue" id="cue" hidden></div>
-  <div class="peeklabel" id="peekLabel" hidden>Your phone on the desk<br><span style="font-weight:400">Select it to pick it up</span></div>
+  <div class="toast" id="toast" role="status" hidden><span class="ti" aria-hidden="true">📱</span><div><b id="toastWho"></b><span>New message on your phone</span></div><button type="button" id="toastOpen">Pick up</button><button type="button" id="toastX" aria-label="Dismiss">×</button></div>
   <div class="pad" id="pad" role="group" aria-label="Walking controls" hidden><button type="button" data-k="KeyW" aria-label="Walk forward">▲</button><button type="button" data-k="turnL" aria-label="Turn left">◀</button><button type="button" data-k="KeyS" aria-label="Walk back">▼</button><button type="button" data-k="turnR" aria-label="Turn right">▶</button></div>
   <div class="loading" id="loading"><div><b>Preparing your study room…</b><br><progress id="prog" max="100" value="0"></progress><br><small id="loadMsg">Loading the 3D model</small></div></div>
 </div>
@@ -472,12 +477,15 @@ function beginStudy(){let i=sIdx(),ses=cur();ses.cfg=JSON.parse(JSON.stringify(S
   let tN=4+Math.random()*2,k=0;while(tN<240){let n=L.ntf[k%L.ntf.length];S.study.timers.push(setTimeout(()=>phoneNotify(n),tN*1000));tN+=8+Math.random()*6;k++}
   if(S.cfg.feed!=='closed'){let tF=7+Math.random()*2;while(tF<240){S.study.timers.push(setTimeout(()=>{S.study.feedShown=(S.study.feedShown||1)+1;if(S.study.feedMin)S.study.feedCount++;if(S.step==='study')render()},tF*1000));tF+=10+Math.random()*5}}
   announce(`Studying: ${L.title}. Select Finish studying when you are done.`)}
-function finishStudy(){S.study.timers.forEach(clearTimeout);if('speechSynthesis'in window)speechSynthesis.cancel();let ses=cur();ses.phone=phoneSnapshot();if(sIdx()===2){ses.direct={hl:[...S.direct.hl],arrows:S.direct.arrows.slice(),note:S.direct.note}}
+function finishStudy(){S.study.timers.forEach(clearTimeout);hideToast();if('speechSynthesis'in window)speechSynthesis.cancel();let ses=cur();ses.phone=phoneSnapshot();if(sIdx()===2){ses.direct={hl:[...S.direct.hl],arrows:S.direct.arrows.slice(),note:S.direct.note}}
   phoneState.lit=false;drawPhoneTexture();S.step='quiz';setView('read');render();announce('The material is hidden. Answer the three questions.')}
 function phoneNotify(n){if(S.step!=='study')return;let ses=cur();ses.ntfArrived++;S.study.ntf.push(n);let ph=phoneSnapshot();playNotif(ph);
-  if(!ph.silenced&&ph.pose!=='box'){ses.ntfShown++;phoneState.lit=true;phoneState.buzz=1;phoneState.lastNtf=n;drawPhoneTexture();updateCue()}}
+  if(!ph.silenced&&ph.pose!=='box'){ses.ntfShown++;phoneState.lit=true;phoneState.buzz=1;phoneState.lastNtf=n;drawPhoneTexture();updateCue();if(S.enlarged||!THREEOK||stage.clientWidth<700)showToast(n)}}
 const notifSound=new Audio('notification.mp3');notifSound.preload='auto';let soundOn=true;
 function playNotif(ph){if(!soundOn||ph.silenced)return;try{notifSound.currentTime=0;notifSound.volume=ph.pose==='box'?.3:1;let p=notifSound.play();if(p&&p.catch)p.catch(()=>{})}catch(e){}}
+let toastT=0;
+function showToast(n){let t=$('toast');$('toastWho').textContent=n[0];t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,6000);announce(`Your phone: new message from ${n[0]}.`)}
+function hideToast(){$('toast').hidden=true;clearTimeout(toastT)}
 function phoneStatusText(){let p=phoneSnapshot();return p.pose==='box'?'in the storage box':`${p.silenced?'silenced':'notifications on'}, ${p.pose==='stand'?'on its stand next to the monitor':p.away?'away from your reading position':'on the desk near you'}`}
 
 /* ================= Phone, notebook DOM ================= */
@@ -663,7 +671,7 @@ function layoutGlue(){if(!S)return;let sw=$('scrWrap'),pw=$('phoneWrap'),nw=$('n
   if(!THREEOK||!camera||stage.classList.contains('flat')){sw.classList.remove('off');return}
   let moving=!!camAnim,narrow=stage.clientWidth<700,facing=view==='seat'&&!moving&&facingScreen(),enl=view==='seat'&&(S.enlarged||narrow&&!moving&&facingScreen(14));
   sw.classList.toggle('enlarged',enl);
-  let pk=enl&&!narrow;sw.classList.toggle('peek',pk);$('peekLabel').hidden=!pk;peekOn=pk;
+  peekOn=false;
   if(enl){sw.classList.remove('off');sw.style.transform='';sw._m=''}
   else{let pts=!facing?null:projectPts([new THREE.Vector3(SCREEN.x,SCREEN.y1,SCREEN.z0),new THREE.Vector3(SCREEN.x,SCREEN.y1,SCREEN.z1),new THREE.Vector3(SCREEN.x,SCREEN.y0,SCREEN.z0),new THREE.Vector3(SCREEN.x,SCREEN.y0,SCREEN.z1)]);glue(sw,pts,840,444,!!pts)}
   if(view==='phone'&&!moving){let l=new THREE.Vector3(),c=[[-1.26,2.78],[1.26,2.78],[-1.26,-2.78],[1.26,-2.78]].map(([x,y])=>phoneScreen.localToWorld(l.set(x,y,0.01).clone()));glue(pw,projectPts(c),260,574,true)}else pw.classList.add('off');
@@ -709,6 +717,8 @@ $('motionBtn').onclick=()=>{reduceMotion=!reduceMotion;$('motionBtn').setAttribu
 $('motionBtn').setAttribute('aria-pressed',reduceMotion);$('altMotion').onclick=()=>{$('motionBtn').click();$('altMotion').textContent=reduceMotion?'Motion reduced (select to restore)':'Reduce motion';announce(reduceMotion?'Motion reduced.':'Motion restored.')};
 function setSound(on){soundOn=on;$('soundBtn').setAttribute('aria-pressed',on);$('soundBtn').textContent=on?'Sound on':'Sound off';$('altSound').textContent=on?'Turn sound off':'Turn sound on';announce(on?'Sound on.':'Sound off.')}
 $('soundBtn').onclick=()=>setSound(!soundOn);$('altSound').onclick=()=>setSound(!soundOn);
+$('toastX').onclick=hideToast;
+$('toastOpen').onclick=()=>{hideToast();if(THREEOK&&camera)setView('phone');else $('phoneWrap').classList.remove('off');renderPhone();phoneState.lit=false;drawPhoneTexture()};
 $('restartBtn').onclick=()=>restart(false);
 $('fsBtn').onclick=()=>{if(document.fullscreenElement){document.exitFullscreen();return}let p=stage.requestFullscreen&&stage.requestFullscreen();if(p&&p.catch)p.catch(()=>window.open(location.href,'_blank'))};
 document.addEventListener('fullscreenchange',()=>{$('fsBtn').textContent=document.fullscreenElement?'Exit full screen':'Full screen';setTimeout(resize,50)});
