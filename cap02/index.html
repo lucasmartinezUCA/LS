@@ -45,6 +45,8 @@ html,body{margin:0;padding:0;background:transparent;font-family:"DM Sans",Arial,
 /* Monitor screen */
 #plab .screen{width:840px;height:444px;background:#f7f9fa;color:var(--text);font-size:16px;line-height:1.45;display:flex;flex-direction:column;border-radius:3px}
 #plab .glue.enlarged{transform:none!important;left:0;top:0;width:100%;height:100%;padding-top:50px;background:#e9eff2;z-index:7;border-radius:14px}
+#plab .glue.enlarged.peek{width:calc(100% - 190px);border-radius:14px 0 0 14px}
+#plab .peeklabel{position:absolute;right:0;top:50px;width:190px;z-index:7;text-align:center;font-size:.74rem;font-weight:700;color:var(--title);background:#ffffffd9;padding:5px 4px;pointer-events:none}
 #plab .glue.enlarged .screen{width:100%;height:100%}
 #plab .stage.flat .screen{width:100%;max-width:900px;height:auto;min-height:420px}
 #plab .osbar{display:flex;align-items:center;gap:10px;background:#0f2c40;color:#d6e6ef;font-size:12px;padding:4px 10px;flex:none}
@@ -182,6 +184,7 @@ html,body{margin:0;padding:0;background:transparent;font-family:"DM Sans",Arial,
     <button type="button" id="fsBtn">Full screen</button>
   </div>
   <div class="cue" id="cue" hidden></div>
+  <div class="peeklabel" id="peekLabel" hidden>Your phone on the desk<br><span style="font-weight:400">Select it to pick it up</span></div>
   <div class="pad" id="pad" role="group" aria-label="Walking controls" hidden><button type="button" data-k="KeyW" aria-label="Walk forward">▲</button><button type="button" data-k="turnL" aria-label="Turn left">◀</button><button type="button" data-k="KeyS" aria-label="Walk back">▼</button><button type="button" data-k="turnR" aria-label="Turn right">▶</button></div>
   <div class="loading" id="loading"><div><b>Preparing your study room…</b><br><progress id="prog" max="100" value="0"></progress><br><small id="loadMsg">Loading the 3D model</small></div></div>
 </div>
@@ -288,7 +291,7 @@ function lessonHTML(L,cfg,opts={}){let st=S.study,hl=S.direct.hl,dir=opts.direct
   let conn=i=>{let a=S.direct.arrows.find(x=>(x.f===i&&x.t===i+1)||(x.f===i+1&&x.t===i));if(!dir||!a)return `<div class="conn"><span class="ar"> </span></div>`;
     return `<div class="conn on"><span class="ar">${a.f===i?'→':'←'}</span>${esc(a.rel)}</div>`};
   let legendItems=[1,2,3].filter(n=>cfg.legend[n]==='separate');
-  let legend=legendItems.length?`<div class="legend" aria-label="Diagram legend"><b class="small">Legend</b>${legendItems.map(n=>`<div class="li${S.legendSel===n?' sel':''}" ${opts.setup?`draggable="true" data-leg="${n}" tabindex="0" role="button" aria-pressed="${S.legendSel===n}"`:''}><b>${n}</b> ${esc(L.parts[n-1][0])}: ${esc(L.parts[n-1][1])}${opts.setup?`<button class="btn sm x" data-act="legRemove" data-n="${n}" aria-label="Remove label ${n}">Remove</button>`:''}</div>`).join('')}</div>`:'';
+  let legend=legendItems.length?`<div class="legend" aria-label="Diagram legend"><b class="small">Legend for the diagram</b>${legendItems.map(n=>`<div class="li${S.legendSel===n?' sel':''}" ${opts.setup?`draggable="true" data-leg="${n}" tabindex="0" role="button" aria-pressed="${S.legendSel===n}"`:''}><b>${n}</b> ${esc(L.parts[n-1][0])}: ${esc(L.parts[n-1][1])}${opts.setup?`<button class="btn sm x" data-act="legRemove" data-n="${n}" aria-label="Remove label ${n}">Remove</button>`:''}</div>`).join('')}</div>`:'';
   let removed=[1,2,3].filter(n=>cfg.legend[n]==='removed');
   let far=opts.setup?'':' style="margin-top:46px"';
   let text=`<div class="ltext${dir&&S.direct.hlMode?' hlmode':''}"><h4>${esc(L.title)}</h4>${L.spans.map((s,i)=>`<span class="span${dir&&hl.has('t'+i)?' hl':''}" data-hk="t${i}">${esc(s)}</span>`).join(' ')}</div>`;
@@ -296,7 +299,8 @@ function lessonHTML(L,cfg,opts={}){let st=S.study,hl=S.direct.hl,dir=opts.direct
   let summary=cfg.summary?`<div class="summary${dir&&hl.has('sum')?' hl':''}" data-hk="sum"><b>Summary</b>${esc(L.spans.join(' '))}${opts.setup?`<div><button class="btn sm" data-act="sumRemove">Remove</button></div>`:''}</div>`:'';
   let narr=cfg.narration==='off'?'':`<div class="narr"><b>Narration</b> <button class="btn sm" data-act="playNarr">Play</button> <span class="small">Transcript:</span> ${esc(cfg.narration==='repeat'?L.spans.join(' '):L.narr)}</div>`;
   let feed='',showFeed=opts.setup?cfg.feed==='open':(cfg.feed!=='closed'&&st.feedOpen&&!st.feedMin),ctl=opts.setup||S.phase!=='s1';if(showFeed){let n=Math.max(1,st.feedShown||1),posts=opts.setup?L.feed.slice(0,3):Array.from({length:Math.min(3,n)},(_,q)=>L.feed[(n-1-q)%L.feed.length]);feed=`<div class="feedwin" role="complementary" aria-label="Campus feed window"><div class="wt"><span>Campus feed</span>${ctl?`<button data-act="feedMin">Minimize</button><button data-act="feedClose">Close</button>`:''}</div>${posts.map(p=>`<div class="post"><small>${esc(p[0])}</small>${esc(p[1])}</div>`).join('')}</div>`}
-  let diagram=`<div class="diagram${dir&&S.direct.hlMode?' hlmode':''}"><div class="drow">${part(0)}${conn(0)}${part(1)}${conn(1)}${part(2)}</div>${dir?S.direct.arrows.filter(a=>Math.abs(a.f-a.t)===2).map(a=>`<div class="small">Arrow: ${a.f+1} → ${a.t+1}: ${esc(a.rel)}</div>`).join(''):''}${narr}</div>`;
+  let named=[1,2,3].every(n=>cfg.legend[n]==='integrated'),cap=named?'':`<div class="small" style="margin-top:6px">${legendItems.length?'Parts 1–3 are explained in the legend.':'The parts are not named.'}</div>`;
+  let diagram=`<div class="diagram${dir&&S.direct.hlMode?' hlmode':''}"><div class="small" style="font-weight:700;color:var(--title);margin-bottom:6px">How the system works</div><div class="drow">${part(0)}${conn(0)}${part(1)}${conn(1)}${part(2)}</div>${cap}${dir?S.direct.arrows.filter(a=>Math.abs(a.f-a.t)===2).map(a=>`<div class="small">Arrow: ${a.f+1} → ${a.t+1}: ${esc(a.rel)}</div>`).join(''):''}${narr}</div>`;
   let left=`${text}${summary?`<div style="margin-top:10px">${summary}</div>`:''}`;
   let right=`${deco}<div style="margin-top:10px">${diagram}</div>${removed.length&&!opts.setup?'':''}`;
   return `<div class="withfeed" style="display:flex;gap:10px;align-items:flex-start"><div class="lesson" style="flex:1;min-width:0"><div>${left}${legend?`<div${far}>${legend}</div>`:''}</div><div>${right}</div></div>${feed}</div>`}
@@ -607,7 +611,8 @@ function pose(pos,yaw,pitch,fov){return{pos:pos.clone(),tgt:pos.clone().add(fwd(
 const VIEWS={
   phone:()=>{let p=phoneScreen.getWorldPosition(new THREE.Vector3()),q=phoneScreen.getWorldQuaternion(new THREE.Quaternion()),n=new THREE.Vector3(0,0,1).applyQuaternion(q);let a=camera.aspect,d=Math.max(9,(a<1?5.6/a:0)+3.4);return{pos:p.clone().add(n.multiplyScalar(d)),tgt:p,fov:42,up:new THREE.Vector3(0,1,0).applyQuaternion(q)}},
   note:()=>{let p=noteG.getWorldPosition(new THREE.Vector3());let a=camera.aspect,d=Math.max(12.5,a<1?10/a:0);return{pos:new THREE.Vector3(p.x-.01,p.y+d,p.z),tgt:p,fov:42,up:new THREE.Vector3(1,0,0)}}};
-function setView(v,instant){if(!THREEOK||!camera){view=v==='phone'||v==='note'?v:'seat';layoutGlue();return}
+function setEnlarged(on){S.enlarged=on;let b=$('enlargeBtn');if(b){b.setAttribute('aria-pressed',on);b.textContent=on?'Show the room':'Enlarge screen'}}
+function setView(v,instant){if(v==='read')setEnlarged(true);else if(v==='desk'||v==='stand'||v==='room')setEnlarged(false);if(!THREEOK||!camera){view=v==='phone'||v==='note'?v:'seat';layoutGlue();return}
   let goal;
   if(v==='phone'||v==='note'){if(view==='walk'||view==='seat'){fp.prev=view;fp.prevPose={pos:fp.pos.clone(),yaw:fp.yaw,pitch:fp.pitch}}goal=VIEWS[v]();view=v}
   else if(v==='back'){let pp=fp.prevPose||{pos:seatPos(),yaw:0,pitch:-.02};goal=pose(pp.pos,pp.yaw,pp.pitch,fp.prev==='seat'?42:60);view=fp.prev}
@@ -637,7 +642,15 @@ function loop(now){requestAnimationFrame(loop);if(!running||!renderer)return;let
   else if(view==='walk'||view==='seat'){if(view==='walk')moveStep(dt);camera.position.copy(fp.pos);camera.up.set(0,1,0);camera.lookAt(fp.pos.clone().add(fwd(fp.yaw,fp.pitch)))}
   if(chairG){let sat=view==='seat'||((view==='phone'||view==='note')&&fp.prev==='seat'),tx=sat?-22:0;chairG.position.x+=(tx-chairG.position.x)*(REDUCED()?1:Math.min(1,dt*5));chairG.visible=chairG.position.x>-20}
   if(phoneState.buzz>0&&!REDUCED()){phoneState.buzz-=.02;let k=Math.sin(now*.09)*.12*phoneState.buzz;placePhone();phoneG.position.x+=k}else if(phoneState.buzz>0){phoneState.buzz=0}
-  renderer.render(scene,camera);layoutGlue()}
+  renderer.setScissorTest(false);renderer.setViewport(0,0,stage.clientWidth,stage.clientHeight);renderer.render(scene,camera);
+  if(peekOn)renderPeek();layoutGlue()}
+/* Live view of the phone beside the enlarged screen, so alerts stay visible in the room */
+let peekOn=false,peekCam=null;
+function renderPeek(){let W=stage.clientWidth,H=stage.clientHeight,w=190,h=H-50;if(!peekCam)peekCam=new THREE.PerspectiveCamera(40,w/h,.5,800);peekCam.aspect=w/h;peekCam.updateProjectionMatrix();
+  let target=phoneState.pose==='box'?new THREE.Vector3(BOX.x,DESK_Y+1,BOX.z):phoneScreen.getWorldPosition(new THREE.Vector3());
+  let n=phoneState.pose==='box'?new THREE.Vector3(-.5,1,0).normalize():new THREE.Vector3(0,0,1).applyQuaternion(phoneScreen.getWorldQuaternion(new THREE.Quaternion())),d=phoneState.pose==='box'?20:15;
+  peekCam.position.copy(target).add(n.multiplyScalar(d)).add(new THREE.Vector3(-3,2,0));peekCam.up.set(0,1,0);peekCam.lookAt(target);
+  renderer.setScissorTest(true);renderer.setScissor(W-w,0,w,h);renderer.setViewport(W-w,0,w,h);renderer.render(scene,peekCam);renderer.setScissorTest(false);renderer.setViewport(0,0,W,H)}
 /* ---- DOM surfaces glued to 3D quads (projective transform) ---- */
 function adj(m){return[m[4]*m[8]-m[5]*m[7],m[2]*m[7]-m[1]*m[8],m[1]*m[5]-m[2]*m[4],m[5]*m[6]-m[3]*m[8],m[0]*m[8]-m[2]*m[6],m[2]*m[3]-m[0]*m[5],m[3]*m[7]-m[4]*m[6],m[1]*m[6]-m[0]*m[7],m[0]*m[4]-m[1]*m[3]]}
 function mm(a,b){let c=[];for(let i=0;i<3;i++)for(let j=0;j<3;j++){let s=0;for(let k=0;k<3;k++)s+=a[3*i+k]*b[3*k+j];c[3*i+j]=s}return c}
@@ -650,6 +663,7 @@ function layoutGlue(){if(!S)return;let sw=$('scrWrap'),pw=$('phoneWrap'),nw=$('n
   if(!THREEOK||!camera||stage.classList.contains('flat')){sw.classList.remove('off');return}
   let moving=!!camAnim,narrow=stage.clientWidth<700,facing=view==='seat'&&!moving&&facingScreen(),enl=view==='seat'&&(S.enlarged||narrow&&!moving&&facingScreen(14));
   sw.classList.toggle('enlarged',enl);
+  let pk=enl&&!narrow;sw.classList.toggle('peek',pk);$('peekLabel').hidden=!pk;peekOn=pk;
   if(enl){sw.classList.remove('off');sw.style.transform='';sw._m=''}
   else{let pts=!facing?null:projectPts([new THREE.Vector3(SCREEN.x,SCREEN.y1,SCREEN.z0),new THREE.Vector3(SCREEN.x,SCREEN.y1,SCREEN.z1),new THREE.Vector3(SCREEN.x,SCREEN.y0,SCREEN.z0),new THREE.Vector3(SCREEN.x,SCREEN.y0,SCREEN.z1)]);glue(sw,pts,840,444,!!pts)}
   if(view==='phone'&&!moving){let l=new THREE.Vector3(),c=[[-1.26,2.78],[1.26,2.78],[-1.26,-2.78],[1.26,-2.78]].map(([x,y])=>phoneScreen.localToWorld(l.set(x,y,0.01).clone()));glue(pw,projectPts(c),260,574,true)}else pw.classList.add('off');
@@ -661,7 +675,7 @@ function hitKind(){let h=ray.intersectObjects(pickable(),true)[0];if(!h)return n
 function deskPoint(y=DESK_Y){let p=new THREE.Vector3();return ray.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0,1,0),-y),p)?p:null}
 function canDragPhone(){return S.phase!=='entry'&&S.phase!=='s1'&&!(S.step==='quiz'||S.step==='feedback')}
 function showOutline(o){if(!o){outline.visible=false;return}let t=o.userData.kind==='mug'?mug:o;let b=new THREE.Box3().setFromObject(t),sz=b.getSize(new THREE.Vector3()),c=b.getCenter(new THREE.Vector3());outline.scale.set(sz.x+.6,sz.y+.6,sz.z+.6);outline.position.copy(c);outline.visible=true}
-cv.addEventListener('pointerdown',e=>{if(!camera)return;cv.focus({preventScroll:true});setRay(e);let o=hitKind();cv.setPointerCapture(e.pointerId);let k=o&&o.userData.kind;
+cv.addEventListener('pointerdown',e=>{if(!camera)return;cv.focus({preventScroll:true});if(peekOn){let r=cv.getBoundingClientRect();if(e.clientX-r.left>r.width-190&&e.clientY-r.top>50){setView('phone');renderPhone();phoneState.lit=false;drawPhoneTexture();return}}setRay(e);let o=hitKind();cv.setPointerCapture(e.pointerId);let k=o&&o.userData.kind;
   if((k==='phone'||k==='mug')&&view==='seat'){drag={o:k==='mug'?mug:o,kind:k,start:[e.clientX,e.clientY],moved:false,id:e.pointerId};return}
   drag={look:true,o,kind:k,x:e.clientX,y:e.clientY,yaw:fp.yaw,pitch:fp.pitch,start:[e.clientX,e.clientY],moved:false,id:e.pointerId}});
 cv.addEventListener('pointermove',e=>{if(!camera)return;setRay(e);
