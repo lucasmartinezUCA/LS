@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Personal Learning Lab: The Focus Room | EDU 500</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/libs/meshopt_decoder.js"></script>
@@ -126,6 +127,13 @@ html,body{margin:0;padding:0;background:transparent;font-family:"DM Sans",Arial,
 #plab .q .qk{font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--label)}
 #plab .q label{display:flex;gap:7px;align-items:flex-start;padding:2px 0;font-size:15.5px}
 #plab .opt3{display:flex;gap:4px;flex-wrap:wrap}
+#plab .conf{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:6px;padding-top:6px;border-top:1px dashed var(--line)}
+#plab .conf label{border:1px solid var(--line2);border-radius:999px;padding:1px 10px;font-size:13.5px;display:inline-flex;gap:5px;align-items:center}
+#plab .tips{display:flex;flex-direction:column;gap:5px;flex:1;min-height:0;overflow:auto}
+#plab .tip{display:flex;gap:7px;align-items:flex-start;background:#ffffff1a;border:1px solid #ffffff33;border-radius:10px;padding:5px 8px;font-size:12px;line-height:1.3;text-align:left;color:#fff}
+#plab .tip[aria-pressed=true]{background:#cfaa65;color:#1b1b1b;border-color:#cfaa65}
+#plab .bubble{background:#ffffff1f;border-radius:12px 12px 12px 3px;padding:7px 9px;font-size:13px}
+#plab .bubble.me{background:#2f7fb5;border-radius:12px 12px 3px 12px;align-self:flex-end}
 #plab .opt3 label{border:1px solid var(--line2);border-radius:7px;padding:2px 8px;font-size:12.5px;display:flex;gap:4px;align-items:center}
 #plab .setup-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:5px 0;border-bottom:1px solid var(--line);font-size:13.5px}
 #plab .setup-row b{min-width:150px;color:var(--title)}
@@ -143,10 +151,14 @@ html,body{margin:0;padding:0;background:transparent;font-family:"DM Sans",Arial,
 /* Notebook UI */
 #plab .notebook{width:420px;height:560px;background:#fffdf6;background-image:repeating-linear-gradient(#fffdf6 0 27px,#cfe0ea 27px 28px);color:#1f3442;padding:22px 22px 16px 46px;font-size:15px;display:flex;flex-direction:column;gap:8px;position:relative}
 #plab .notebook:before{content:"";position:absolute;left:34px;top:0;bottom:0;width:1px;background:#e5a3a3}
-#plab .notebook h4{margin:0;font-family:Georgia,serif;font-size:19px;color:var(--title)}
-#plab .notebook textarea{flex:1;border:1px dashed #b9cbd4;background:#ffffffb0;border-radius:6px;padding:6px;font-size:15px;line-height:28px;resize:none}
+#plab .notebook,#plab .notebook textarea{font-family:Caveat,'Segoe Print','Bradley Hand','Comic Sans MS',cursive}
+#plab .notebook h4{margin:0;font-family:Caveat,'Segoe Print',cursive;font-weight:700;font-size:30px;color:var(--title)}
+#plab .notebook label.small{font-family:"DM Sans",Arial,sans-serif}
+#plab .notebook .btn{font-family:"DM Sans",Arial,sans-serif}
+#plab .notebook textarea{flex:1;border:1px dashed #b9cbd4;background:transparent;border-radius:6px;padding:0 6px;font-size:25px;line-height:28px;color:#1d3f63;resize:none}
 /* Alternative + footer */
 #plab .alt{margin-top:12px;font-size:.88rem}
+#plab .alt.kbd-only:not(:focus-within):not([open]){position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 #plab .alt summary{cursor:pointer;font-weight:700;color:var(--label)}
 #plab .alt .row{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
 #plab .alt .row button{font-size:.82rem;font-weight:700;border-radius:8px;padding:6px 12px;border:1px solid var(--line2);background:#fff;color:var(--title)}
@@ -193,7 +205,7 @@ html,body{margin:0;padding:0;background:transparent;font-family:"DM Sans",Arial,
   <div class="pad" id="pad" role="group" aria-label="Walking controls" hidden><button type="button" data-k="KeyW" aria-label="Walk forward">▲</button><button type="button" data-k="turnL" aria-label="Turn left">◀</button><button type="button" data-k="KeyS" aria-label="Walk back">▼</button><button type="button" data-k="turnR" aria-label="Turn right">▶</button></div>
   <div class="loading" id="loading"><div><b>Preparing your study room…</b><br><progress id="prog" max="100" value="0"></progress><br><small id="loadMsg">Loading the 3D model</small></div></div>
 </div>
-<details class="alt" id="alt"><summary>Text and keyboard controls</summary>
+<details class="alt kbd-only" id="alt"><summary>Text and keyboard controls</summary>
   <p>Every task appears on the computer screen. These buttons give the same access to the room and its objects without using the 3D view.</p>
   <div class="row"><b style="align-self:center">Position:</b><button type="button" data-view="screen">Sit and look at the screen</button><button type="button" data-view="desk">Sit and look at the desk</button><button type="button" data-view="stand">Stand up</button><button type="button" data-view="room">Go back to the door</button><button type="button" id="altEnlarge">Show the screen enlarged</button></div>
   <div class="row"><b style="align-self:center">Phone:</b><button type="button" id="altPhoneOpen">Open the phone</button><button type="button" id="altPhoneMove">Put the phone in the storage box</button><button type="button" id="altPhoneStand">Return the phone to its stand</button></div>
@@ -201,7 +213,7 @@ html,body{margin:0;padding:0;background:transparent;font-family:"DM Sans",Arial,
   <div class="row"><b style="align-self:center">Tutorial:</b><button type="button" id="altMug">Move the mug</button><b style="align-self:center;margin-left:10px">Sound:</b><button type="button" id="altSound">Turn sound off</button><b style="align-self:center;margin-left:10px">Motion:</b><button type="button" id="altMotion">Reduce motion</button></div>
   <p id="altStatus" class="small"></p>
 </details>
-<div class="foot"><span>Formative learning activity · No time limit · No automatic submission to the LMS</span><span>Room model: <a href="https://sketchfab.com/3d-models/workroomstudyroom-657ee9bf11734f65a25b1f31a44ef71d" target="_blank" rel="noopener">workroom/study/room</a> by <a href="https://sketchfab.com/mrdt.club" target="_blank" rel="noopener">MrdT</a>, <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>. Changes: compressed textures and geometry, brand logo covered, original phone replaced; stand, notebook and storage box added.</span><span>Phone model: <a href="https://sketchfab.com/3d-models/smartphone-793ce4333ddb4cb8ab30c6b1da96df81" target="_blank" rel="noopener">Smartphone</a> by <a href="https://sketchfab.com/Naudaff3D" target="_blank" rel="noopener">Naudaff3D</a>, CC BY 4.0, compressed, screen replaced by the activity’s interface. Notification sound: Universfield.</span></div>
+
 <div id="live" class="sr" aria-live="polite" aria-atomic="true"></div>
 </section>
 <script>
@@ -241,12 +253,9 @@ const LESSONS={
        {t:'understanding',q:'Why does the pump stop?',o:['The measured moisture rises above the preset level, and the controller responds','The pump has run for a fixed number of minutes','The plant absorbs enough water and closes the pump','The pump measures the moisture and stops itself'],a:0,why:'The controller stops the pump when the sensor reading crosses the preset level.'},
        {t:'application',q:'The sensor reports wet soil while the soil is actually dry. What will the controller do?',o:['Keep the pump off','Turn the pump on because the soil is dry','Water on its usual daily schedule','Switch the pump on and off'],a:0,why:'The controller acts on the signal, so a wet reading keeps the pump off under the stated rule.'}]}
 };
-const SUPPORTS=[['labels','Labels integrated into the diagram'],['signal','Signals that mark the key relation'],['narration','Brief narration that explains the diagram'],['partial','A partly completed diagram to finish'],['concise','A concise diagram without extra explanation'],['problem','An application problem to solve']];
-const LEVELS=[['keep','Keep'],['reduce','Reduce'],['demand','On demand']];
-const TRANSFER={
-  protect:[['caption','Place the caption next to the diagram',1],['banner','Remove the animated decorative banner',1],['audio','Replace the word-for-word audio with narration that explains the diagram, or turn it off (keeping a transcript)',1],['diagram','Remove the diagram to shorten the module',0],['images','Add more images to make the page attractive',0]],
-  direct:[['mark','Mark the relation between the sensor, the controller and the heater',1],['arrow','Add an arrow labeled “sends the temperature reading to”',1],['explain','Ask learners to explain the relation in their own words',1],['all','Highlight every sentence on the page',0],['fact','Add a fun fact about the history of thermostats',0]]};
-
+const TIPS=[['labels','Put the names right next to each part of the diagram.'],['signal','Mark the key relation: sensor reading → controller → action.'],['narration','Listen to a short narration that explains the diagram.'],['partial','Finish a diagram that is already half filled in.'],['concise','Skip the long explanation and study a short diagram.'],['problem','Go straight to a problem: what happens if the sensor fails?']];
+const TIP_FIT={a:{labels:1,signal:1,narration:1,partial:1,concise:0,problem:0},b:{labels:0,signal:1,narration:0,partial:0,concise:1,problem:1}};
+const MATES={a:['Jordan','Hi! It’s my first time studying how automatic systems work. Any tips for the next lesson?'],b:['Sam','I already know sensor–controller–action systems well. How do I study the next lesson without wasting time?']};
 /* ================= State ================= */
 let S;
 function freshState(){return{
@@ -255,17 +264,17 @@ function freshState(){return{
   phone:{pose:'stand',silenced:false,x:0,z:0},
   sessions:[newSession(),newSession(),newSession()],
   direct:{hl:new Set(),arrows:[],note:'',noteOpened:false},
-  profile:{a:{},b:{},why:''},transfer:{protect:'',direct:'',adaptA:'',adaptB:'',why:'',self:{}},commitment:'',
+  wrap:{change:'',why:'',advice:{a:[],b:[]},sent:{a:false,b:false},plan:{protect:'',direct:'',evidence:''}},profile:{a:{},b:{},why:''},transfer:{protect:'',direct:'',adaptA:'',adaptB:'',why:'',self:{}},commitment:'',
   enlarged:false,study:{feedOpen:true,feedMin:false,feedCount:0,ntf:[],timers:[]},legendSel:null}}
 function baseCfg(){return{feed:'open',legend:{1:'separate',2:'separate',3:'separate'},deco:true,summary:true,narration:'off'}}
-function newSession(){return{lesson:null,cfg:null,phone:null,ntfArrived:0,ntfShown:0,ntfOpened:0,feedOpened:0,first:[],second:[],self:'',changes:[]}}
+function newSession(){return{lesson:null,cfg:null,phone:null,conf:[],ntfArrived:0,ntfShown:0,ntfOpened:0,feedOpened:0,first:[],second:[],self:'',changes:[]}}
 const cur=()=>S.sessions[sIdx()];
 function sIdx(){return {s1:0,s2:1,s3:2}[S.phase]??0}
 const lessonFor=i=>LESSONS[S.order[i]];
 
 /* ================= Screen rendering ================= */
 const scr=$('screen');
-function osbar(title){let s=S.phase;let lbl={entry:'Welcome',s1:'Session 1 · Experience the problem',s2:'Session 2 · Protect your attention',s3:'Session 3 · Direct your attention',profile:'Build your learning profile',transfer:'Integrative check',report:'Session report'}[s];return `<div class="osbar"><b>Focus Room</b><span>${esc(lbl)}</span><span class="sp"></span><span>${esc(title||'')}</span></div>`}
+function osbar(title){let s=S.phase;let lbl={entry:'Welcome',s1:'Session 1 · Experience the problem',s2:'Session 2 · Protect your attention',s3:'Session 3 · Direct your attention',wrap:'Build your learning profile',report:'Session report'}[s];return `<div class="osbar"><b>Focus Room</b><span>${esc(lbl)}</span><span class="sp"></span><span>${esc(title||'')}</span></div>`}
 function taskbar(){let st=S.study,show=S.step==='study'||S.step==='setup';if(!show||S.cfg.feed==='closed')return `<div class="taskbar"><span class="small">Study computer</span></div>`;
   if(S.phase==='s1')return `<div class="taskbar"><span class="small">Open apps: Campus feed</span></div>`;
   return `<div class="taskbar"><span class="small">Open apps:</span><button data-act="feedToggle">Campus feed${st.feedMin&&st.feedCount?`<span class="badge">${st.feedCount}</span>`:''}</button></div>`}
@@ -273,8 +282,7 @@ function render(){if(!S)return;let h='';
   switch(S.phase){
    case 'entry':h=entryScreen();break;
    case 's1':case 's2':case 's3':h=sessionScreen();break;
-   case 'profile':h=profileScreen();break;
-   case 'transfer':h=transferScreen();break;
+   case 'wrap':h=wrapScreen();break;
    case 'report':h=reportScreen();break}
   let da=$('deskArea'),top=da?da.scrollTop:0,keep=S._lastKey===S.phase+S.step,fid=document.activeElement&&scr.contains(document.activeElement)?document.activeElement.id:null;S._lastKey=S.phase+S.step;
   scr.innerHTML=osbar()+`<div class="desk-area" id="deskArea">${h}</div>`+taskbar();if(keep)$('deskArea').scrollTop=top;if(fid&&$(fid))$(fid).focus({preventScroll:true});
@@ -288,7 +296,7 @@ function entryScreen(){let t=S.tut;
    <li class="${t.walked?'done':''}">Walk around the room with W A S D or the arrow keys, or click the floor.</li>
    <li class="${t.seated?'done':''}">Select the chair to sit at the desk.</li>
    <li class="${t.moved?'done':''}">While seated, drag the mug a little.</li></ul>
-   <p class="small">Drag anywhere in the room to look around. Use <b>Stand up</b> at the top to walk again and <b>Look at the screen</b> to come back to this page. Enlarge screen shows this page in full size. The tutorial is optional.</p></div></div>`}
+   <p class="small">Drag anywhere in the room to look around. Use <b>Stand up</b> at the top to walk again and <b>Look at the screen</b> to come back to this page. Enlarge screen shows this page in full size. The tutorial is optional.</p></div></div><p class="small" style="margin-top:8px">Credits: room model <a href="https://sketchfab.com/3d-models/workroomstudyroom-657ee9bf11734f65a25b1f31a44ef71d" target="_blank" rel="noopener">workroom/study/room</a> by MrdT and phone model <a href="https://sketchfab.com/3d-models/smartphone-793ce4333ddb4cb8ab30c6b1da96df81" target="_blank" rel="noopener">Smartphone</a> by Naudaff3D, both <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>, adapted for this activity. Notification sound by Universfield.</p>`}
 
 function lessonHTML(L,cfg,opts={}){let st=S.study,hl=S.direct.hl,dir=opts.direct;
   let part=i=>{let state=cfg.legend[i+1],p=L.parts[i],box=`dbox${dir&&hl.has('b'+i)?' hl':''}`;
@@ -333,15 +341,14 @@ function sessionScreen(){let i=sIdx(),L=lessonFor(i),step=S.step,ses=cur();
         <span>Arrow from ${sel('f')} to ${sel('t')} : ${sel('rel')}</span><button class="btn sm" data-act="addArrow">Add arrow</button>${S.direct.arrows.length?`<button class="btn sm" data-act="clearArrows">Clear arrows</button>`:''}<button class="btn sm" data-act="openNote">Notebook</button></div>`}
     return `${tools}<div style="position:relative">${lessonHTML(L,S.cfg,{direct:i===2})}</div><div class="scr-row"><button class="btn pri" data-act="finishStudy">Finish studying</button>${i>0?`<span class="small">Phone: ${esc(phoneStatusText())}</span>`:''}</div>`}
   if(step==='quiz'){return `<div class="scr-k">Session ${num} · Questions</div><p class="scr-p small">The material is hidden. Answer from what you studied.</p>${L.qs.map((q,k)=>quizItem(q,k,i)).join('')}
-     <div class="q"><div class="qt">Before you check: how well do you think you understood the material?</div><div class="opt3">${['Not well','Partly','Well'].map(v=>`<label><input type="radio" name="self" value="${v}" ${ses.self===v?'checked':''} data-act="self"> ${v}</label>`).join('')}</div></div>
      <div class="scr-row"><button class="btn pri" data-act="checkQuiz">Check answers</button></div>`}
   if(step==='feedback')return feedbackScreen(i,L);
   return ''}
 function quizItem(q,k,i,locked){let ses=S.sessions[i],ans=ses.first[k];let ord=q.order||(q.order=shuffle(q.o.map((_,j)=>j)));
-  return `<div class="q"><div class="qk">${q.t}</div><div class="qt">${k+1}. ${esc(q.q)}</div>${ord.map(j=>`<label><input type="radio" name="q${k}" value="${j}" ${ans===j?'checked':''} ${locked?'disabled':''} data-act="ans" data-k="${k}"> ${esc(q.o[j])}</label>`).join('')}</div>`}
-function feedbackScreen(i,L){let ses=S.sessions[i],h=`<div class="scr-k">Session ${i+1} · Feedback</div>`;
+  return `<div class="q"><div class="qk">${q.t}</div><div class="qt">${k+1}. ${esc(q.q)}</div>${ord.map(j=>`<label><input type="radio" name="q${k}" value="${j}" ${ans===j?'checked':''} ${locked?'disabled':''} data-act="ans" data-k="${k}"> ${esc(q.o[j])}</label>`).join('')}<div class="conf" role="radiogroup" aria-label="How sure are you?"><span class="small">How sure are you?</span>${[['sure','I’m sure'],['guess','I’m guessing']].map(([v,l])=>`<label><input type="radio" name="c${k}" value="${v}" ${ses.conf[k]===v?'checked':''} data-act="conf" data-k="${k}"> ${l}</label>`).join('')}</div></div>`}
+function feedbackScreen(i,L){let ses=S.sessions[i],h=`<div class="scr-k">Session ${i+1} · Feedback</div>`;let cal=(c,ok)=>!c?'':c==='sure'?(ok?' You were sure, and you were right.':' You were sure, but this was not correct. Feeling familiar with a text is not the same as understanding it.'):(ok?' You were guessing and got it right. Could you explain why?':' You were guessing, so this is a point to review.');
   h+=L.qs.map((q,k)=>{let f=ses.first[k],s=ses.second[k],ok=f===q.a,ok2=s===q.a;let ord=q.order;
-    return `<div class="fb ${ok||ok2?'ok':'no'}"><b>${k+1}. ${q.t}:</b> ${ok?'Correct on the first attempt.':s!=null?(ok2?'Correct after revision.':'Still not correct.'):'Not correct yet.'} ${(ok||s!=null)?esc(q.why):''}
+    return `<div class="fb ${ok||ok2?'ok':'no'}"><b>${k+1}. ${q.t}:</b> ${ok?'Correct on the first attempt.':s!=null?(ok2?'Correct after revision.':'Still not correct.'):'Not correct yet.'}${esc(cal(ses.conf[k],ok))} ${(ok||s!=null)?esc(q.why):''}
      ${!ok&&s==null?`<div style="margin-top:4px">${ord.map(j=>`<label style="display:inline-flex;gap:4px;margin-right:10px;font-size:13px"><input type="radio" name="r${k}" value="${j}" data-act="rev" data-k="${k}"> ${esc(q.o[j])}</label>`).join('')}</div>`:''}</div>`}).join('');
   if(i===0)h+=`<div class="fb info"><b>What happened in this session.</b> The material had a legend placed away from the diagram, a decorative panel, a summary that repeated the text, and a feed window open on the computer. ${ses.ntfShown} phone notification${ses.ntfShown===1?'':'s'} lit up the phone; you opened ${ses.ntfOpened}. This is a description of this session, not a diagnosis of your attention.</div>`;
   if(i===1)h+=setupFeedback(ses);
@@ -377,45 +384,48 @@ function directFeedback(L){let d=S.direct,total=L.spans.length+3+(S.cfg.deco?1:0
 function verbatim(a,b){let w=s=>s.toLowerCase().replace(/[^a-z\s]/g,'').split(/\s+/).filter(Boolean),A=w(a),B=w(b).join(' ');if(A.length<5)return false;let hit=0,tot=0;for(let i=0;i+3<=A.length;i++){tot++;if(B.includes(A.slice(i,i+3).join(' ')))hit++}return tot&&hit/tot>=.6}
 function changedSummary(c){let b=baseCfg(),n=0;if(c.feed!==b.feed)n++;if(!c.deco)n++;if(!c.summary)n++;if(c.narration!=='off')n++;n+=Object.values(c.legend).filter(v=>v!=='separate').length;return n?`${n} change${n>1?'s':''} so far`:'No changes yet'}
 
-function profileScreen(){let p=S.profile;
-  let col=(who)=>SUPPORTS.map(([id,lab])=>`<div style="padding:3px 0;border-bottom:1px solid var(--line);font-size:13.5px"><div>${esc(lab)}</div>${LEVELS.map(([v,l])=>`<label class="small"><input type="radio" name="${who}-${id}" value="${v}" ${p[who][id]===v?'checked':''} data-act="prof" data-who="${who}" data-id="${id}"> ${l}</label>`).join(' ')}</div>`).join('');
-  let fb='';if(S.profileDone)fb=profileFeedback();
-  return `<div class="scr-k">Build your learning profile</div><div class="scr-h">Adapt the supports to two learners.</div>
-   <div class="grid2" style="grid-template-columns:1fr 1fr"><div class="card"><b>Jordan</b><div class="small">Knows little about automatic systems.</div>${col('a')}</div><div class="card"><b>Sam</b><div class="small">Already understands the sensor–controller–action relation.</div>${col('b')}</div></div>
-   <div class="q" style="margin-top:8px"><div class="qt">Explain at least one difference between your choices for Jordan and Sam.</div><textarea class="tx" data-field="profile.why" aria-label="Your justification">${esc(p.why)}</textarea></div>
-   ${fb}<div class="scr-row">${S.profileDone?`<button class="btn pri" data-act="toTransfer">Continue: integrative check</button>`:`<button class="btn pri" data-act="profileCheck">Review my choices</button>`}</div>`}
-function profileFeedback(){let p=S.profile,diff=SUPPORTS.filter(([id])=>p.a[id]!==p.b[id]).length,unset=SUPPORTS.filter(([id])=>!p.a[id]||!p.b[id]).length,out=[];
-  if(unset)out.push(`${unset} support(s) still have no choice for one of the learners. You can leave them, but your profile is more useful when it is complete.`);
-  if(!diff)out.push('You made the same choices for both learners. Consider whether prior knowledge changes how much explanation helps: support that guides a beginner can become redundant for someone who already knows the relation.');
-  else out.push(`You varied ${diff} support(s) between the learners. Supports that help a beginner, such as integrated labels or a partly guided diagram, may be redundant for an experienced learner (expertise reversal).`);
-  if(p.b.concise==='keep'||p.b.problem==='keep')out.push('For Sam, a concise representation or an application problem can keep the task demanding without repeating what he already knows.');
-  if(p.a.labels==='keep'||p.a.narration==='keep')out.push('For Jordan, integrated labels or explanatory narration can reduce the search for information that must be used together.');
-  out.push('Neither profile has a fixed answer: not every expert rejects support, and not every beginner needs the same amount of explanation.');
-  if(p.why.trim().length<15)out.push('Your justification is still short. Name the difference and the reason connected to prior knowledge.');
-  return `<div class="fb info"><ul style="margin:0;padding-left:18px">${out.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`}
-function transferScreen(){let t=S.transfer,opt=(name,list)=>list.map(([v,l])=>`<label style="display:flex;gap:6px;font-size:13.5px"><input type="radio" name="${name}" value="${v}" ${t[name]===v?'checked':''} data-act="tr" data-f="${name}"> ${esc(l)}</label>`).join('');
-  let fb='';if(S.transferDone){let p=TRANSFER.protect.find(x=>x[0]===t.protect),d=TRANSFER.direct.find(x=>x[0]===t.direct);
-    fb=`<div class="fb info"><ul style="margin:0;padding-left:18px"><li>${p?(p[2]?'Your protection change reduces a demand that does not serve the goal while keeping the necessary diagram.':'This change does not protect attention: it either removes necessary information or adds competing material.'):'Choose a protection change.'}</li><li>${d?(d[2]?'Your directing change points processing toward the central relation.':'This change does not set a priority on the central relation.'):'Choose a directing change.'}</li><li>Use the criteria below to review your justification. This check is not graded automatically.</li></ul></div>
-    <table class="rep"><thead><tr><th>Criterion</th><th>Full performance</th><th>Self-review</th></tr></thead><tbody>${[['diag','Diagnosis','Identifies a competing demand and explains its effect on selection, organization or integration.'],['prot','Protection','Reduces an unnecessary demand without removing necessary information.'],['dirc','Direction','Points processing to a central relation and justifies the choice.'],['aud','Fit to the audience','Relates the support to prior knowledge and states a condition or limit.']].map(([k,n,d])=>`<tr><th scope="row">${n}</th><td>${d}</td><td><select data-act="selfrev" data-k="${k}" aria-label="Self-review for ${n}">${['','0','1','2','3'].map(v=>`<option ${t.self[k]===v?'selected':''}>${v}</option>`).join('')}</select></td></tr>`).join('')}</tbody></table><p class="small">0 = absent or incompatible · 1 = action named without a mechanism · 2 = relevant action, partial justification · 3 = full performance.</p>`}
-  return `<div class="scr-k">Integrative check</div><div class="scr-h">A new case: an introductory thermostat module for adults.</div>
-   <p class="scr-p">The module has a necessary diagram, a caption placed on a separate page, an audio track that repeats all on-screen text word for word, and an animated decorative banner.</p>
-   <div class="grid2" style="grid-template-columns:1fr 1fr"><div class="card"><b>One change that protects attention</b>${opt('protect',TRANSFER.protect)}</div><div class="card"><b>One change that directs attention</b>${opt('direct',TRANSFER.direct)}</div></div>
-   <div class="grid2" style="grid-template-columns:1fr 1fr;margin-top:8px"><div class="q"><div class="qt">Adapt one change for adults new to the topic.</div><textarea class="tx" data-field="transfer.adaptA">${esc(t.adaptA)}</textarea></div><div class="q"><div class="qt">Adapt it for adults who already know how thermostats work.</div><textarea class="tx" data-field="transfer.adaptB">${esc(t.adaptB)}</textarea></div></div>
-   <div class="q"><div class="qt">Justify your choices in two or three sentences.</div><textarea class="tx" data-field="transfer.why">${esc(t.why)}</textarea></div>
-   ${fb}<div class="scr-row">${S.transferDone?`<button class="btn pri" data-act="toReport">See my session report</button>`:`<button class="btn pri" data-act="transferCheck">Review my proposal</button>`}<button class="btn" data-act="toReport">Skip to the report</button></div>`}
-function sessionRow(i){let s=S.sessions[i],L=LESSONS[s.lesson||S.order[i]],c=t=>{let k=L.qs.findIndex(q=>q.t===t);return s.first[k]===L.qs[k].a?'✓':s.second[k]===L.qs[k].a?'✓ after revision':'✗'};
+function usedChanges(){let out=[],k2=S.sessions[1].cfg?cfgKeys(S.sessions[1].cfg,S.sessions[1].phone):null,d=S.sessions[2].direct||{};
+  if(k2){if(k2.phone!=='kept')out.push(['phone','Putting the phone away or silencing it']);if(k2.feed!=='open')out.push(['feed','Closing or minimizing the feed window']);if(k2.legend==='integrated')out.push(['labels','Placing the labels next to the diagram']);if(k2.deco==='removed')out.push(['deco','Removing the decorative panel']);if(k2.summary==='removed')out.push(['summary','Removing the repeated summary']);if(k2.narration==='explain')out.push(['narr','Narration that explains the diagram'])}
+  if(d.hl&&d.hl.length)out.push(['mark','Marking the key parts']);if(d.arrows&&d.arrows.length)out.push(['arrow','Adding an arrow that explains a relation']);if(d.note)out.push(['note','Writing the relation in my own words']);
+  out.push(['none','None of them seemed to make a difference']);return out}
+function score(i){let s=S.sessions[i],L=LESSONS[s.lesson||S.order[i]];return L.qs.filter((q,k)=>s.first[k]===q.a).length}
+function adviceFeedback(who){let picks=S.wrap.advice[who],fit=TIP_FIT[who],good=picks.filter(t=>fit[t]).length,name=MATES[who][0];
+  if(who==='a')return good===2?`Good fit for ${name}. Someone new to the topic benefits from support that shows how the parts connect.`:good===1?`One of your tips fits ${name} well. The other assumes knowledge ${name} does not have yet.`:`These tips suit someone who already knows the topic. ${name} would likely miss the explanation needed to understand the parts.`;
+  return good===2?`Good fit for ${name}. Someone who already knows the relation gains more from a short, demanding task than from repeated explanations.`:good===1?`One of your tips fits ${name} well. The other repeats what ${name} already knows, which can slow an expert down (expertise reversal).`:`These tips repeat what ${name} already knows. Support that helps a beginner can become redundant for an expert, although not every expert rejects support.`}
+function wrapScreen(){let w=S.wrap,st=S.step;
+  if(st==='changes'){let rows=[0,1,2].map(i=>{let s=S.sessions[i],L=LESSONS[s.lesson||S.order[i]],k=s.cfg&&i>0?cfgKeys(s.cfg,s.phone):null;
+      let set=i===0?'Initial setup: distractions on':Object.entries(k||{}).filter(([d,v])=>!['kept','open','separate','off'].includes(v)).map(([d,v])=>`${d} ${v}`).join(', ')||'No changes';if(i===2&&s.direct)set+=` + ${[(s.direct.hl||[]).length?'marks':'',(s.direct.arrows||[]).length?'arrows':'',s.direct.note?'notes':''].filter(Boolean).join(', ')||'no directing tools'}`;
+      return `<tr><th scope="row">${i+1} · ${esc(L.title)}</th><td>${score(i)}/3</td><td>${s.ntfOpened}/${s.ntfShown}</td><td class="small">${esc(set)}</td></tr>`}).join('');
+    return `<div class="scr-k">Build your learning profile · Step 1 of 3</div><div class="scr-h">What changed for you?</div>
+     <table class="rep"><thead><tr><th>Session</th><th>Correct on first try</th><th>Phone alerts opened / shown</th><th>What was different</th></tr></thead><tbody>${rows}</tbody></table>
+     <div class="q" style="margin-top:10px"><div class="qt">Which change made the biggest difference for you?</div>${usedChanges().map(([v,l])=>`<label><input type="radio" name="chg" value="${v}" ${w.change===v?'checked':''} data-act="wchg"> ${esc(l)}</label>`).join('')}
+     <label class="small" for="chgWhy" style="display:block;margin-top:6px">Why? One sentence is enough.</label><input id="chgWhy" class="tx" style="width:100%;min-height:0;height:38px;border:1px solid var(--line2);border-radius:8px;padding:6px;font-size:15px" data-field="wrap.why" value="${esc(w.why)}"></div>
+     <p class="small">The texts were different and share a structure, so a better score can also come from practice. Use your experience, not only the numbers.</p>
+     <div class="scr-row"><button class="btn pri" data-act="wNext" ${w.change?'':'disabled'}>Continue</button></div>`}
+  if(st==='advise'){let done=w.sent.a&&w.sent.b;
+    return `<div class="scr-k">Build your learning profile · Step 2 of 3</div><div class="scr-h">Two classmates asked for your advice.</div>
+     <p class="scr-p">Jordan and Sam sent you messages. Pick up your phone and send each of them two tips for studying the next lesson.</p>
+     <div class="grid2" style="grid-template-columns:1fr 1fr">${['a','b'].map(x=>`<div class="card"><b>${MATES[x][0]}</b> <span class="small">${x==='a'?'new to the topic':'already knows the topic'}</span><div class="small" style="margin-top:4px">${w.sent[x]?'Answered':'Waiting for your answer'}</div>${w.sent[x]?`<div class="fb info" style="margin-top:6px">${esc(adviceFeedback(x))}</div>`:''}</div>`).join('')}</div>
+     <div class="scr-row"><button class="btn${done?'':' pri'}" data-act="pickPhone">Pick up the phone</button><button class="btn pri" data-act="wNext" ${done?'':'disabled'}>Continue</button></div>`}
+  let pl=w.plan,ok=pl.protect.trim()&&pl.direct.trim();
+  return `<div class="scr-k">Build your learning profile · Step 3 of 3</div><div class="scr-h">Write your plan in the notebook.</div>
+   <p class="scr-p">Use the notebook on your desk to write three short lines:</p><ul class="chk"><li class="${pl.protect.trim()?'done':''}">One way you will <b>protect</b> your attention.</li><li class="${pl.direct.trim()?'done':''}">One way you will <b>direct</b> your attention.</li><li class="${pl.evidence.trim()?'done':''}">How you will know if it <b>worked</b>.</li></ul>
+   <div class="scr-row"><button class="btn${ok?'':' pri'}" data-act="openPlan">Open the notebook</button><button class="btn pri" data-act="toReport" ${ok?'':'disabled'}>See my report</button></div>`}
+function sessionRow(i){let s=S.sessions[i],L=LESSONS[s.lesson||S.order[i]],c=t=>{let k=L.qs.findIndex(q=>q.t===t),cf=s.conf[k]?(s.conf[k]==='sure'?' (sure)':' (guess)'):'';return (s.first[k]===L.qs[k].a?'✓':s.second[k]===L.qs[k].a?'✓ after revision':'✗')+cf};
   let setup=s.cfg?(i===0?'Initial setup':Object.entries(cfgKeys(s.cfg,s.phone)).map(([d,v])=>`${d}: ${v}`).join(', ')):'—';
   return `<tr><th scope="row">${i+1} · ${esc(L.title)}</th><td>${c('recognition')}</td><td>${c('understanding')}</td><td>${c('application')}</td><td>${s.ntfOpened}/${s.ntfShown}</td><td class="small">${esc(setup)}</td></tr>`}
 function reportScreen(){
   return `<div class="scr-k">Session report</div><div class="scr-h">What you did in the Focus Room</div>
    <table class="rep"><thead><tr><th>Session</th><th>Recognition</th><th>Understanding</th><th>Application</th><th>Phone alerts opened / shown</th><th>Setup</th></tr></thead><tbody>${[0,1,2].map(sessionRow).join('')}</tbody></table>
    <p class="small">Results can be equal, better or worse across sessions. The three texts are different and share a structure, so learning from one round to the next is possible. This report describes your actions; it does not measure attention or predict retention.</p>
-   <div class="q"><div class="qt">Which change will you try in your own study routine, why, and what evidence will help you evaluate it?</div><textarea class="tx" data-field="commitment" aria-label="Your commitment">${esc(S.commitment)}</textarea><div class="small">Name one protection, one direction and the evidence you will follow.</div></div>
-   <div class="scr-row"><button class="btn" data-act="copyRefl">Copy my reflection</button><button class="btn" data-act="exportTxt">Download summary (.txt)</button><button class="btn" data-act="exportJson">Download data (.json)</button><button class="btn" data-act="restart">Start again</button></div><div id="copyMsg" class="small" role="status"></div>`}
+   <div class="grid2" style="grid-template-columns:1fr 1fr;margin-top:8px"><div class="card"><b>Biggest difference for you</b><div>${esc((usedChanges().find(x=>x[0]===S.wrap.change)||['',''])[1]||'—')}</div><div class="small">${esc(S.wrap.why)}</div></div>
+   <div class="card"><b>Your advice</b>${['a','b'].map(x=>`<div class="small"><b>${MATES[x][0]}:</b> ${S.wrap.advice[x].map(t=>esc(TIPS.find(y=>y[0]===t)[1])).join(' ')||'—'}</div>`).join('')}</div></div>
+   <div class="card" style="margin-top:8px"><b>Your plan</b><div>Protect: ${esc(S.wrap.plan.protect||'—')}</div><div>Direct: ${esc(S.wrap.plan.direct||'—')}</div><div>Evidence: ${esc(S.wrap.plan.evidence||'—')}</div></div>
+   <div class="scr-row"><button class="btn" data-act="copyRefl">Copy my reflection</button><button class="btn" data-act="exportTxt">Download summary (.txt)</button><button class="btn" data-act="exportJson">Download data (.json)</button><button class="btn" data-act="restart">Start again</button></div><div id="copyMsg" class="small" role="status"></div><p class="small" style="margin-top:8px">Credits: room model <a href="https://sketchfab.com/3d-models/workroomstudyroom-657ee9bf11734f65a25b1f31a44ef71d" target="_blank" rel="noopener">workroom/study/room</a> by MrdT and phone model <a href="https://sketchfab.com/3d-models/smartphone-793ce4333ddb4cb8ab30c6b1da96df81" target="_blank" rel="noopener">Smartphone</a> by Naudaff3D, both <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>, adapted for this activity. Notification sound by Universfield.</p>`}
 
 /* ================= Screen interaction ================= */
 function bindScreen(){
-  scr.querySelectorAll('textarea[data-field]').forEach(t=>t.oninput=()=>{let [a,b]=t.dataset.field.split('.');if(b)S[a][b]=t.value;else S[a]=t.value});
+  scr.querySelectorAll('[data-field]').forEach(t=>t.oninput=()=>{let [a,b]=t.dataset.field.split('.');if(b)S[a][b]=t.value;else S[a]=t.value});
   scr.querySelectorAll('[data-arr]').forEach(s=>s.onchange=()=>{});
   scr.querySelectorAll('[data-leg]').forEach(el=>{el.ondragstart=e=>{e.dataTransfer.setData('text/plain',el.dataset.leg)};el.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();selectLegend(+el.dataset.leg)}}});
   scr.querySelectorAll('[data-drop]').forEach(el=>{el.ondragover=e=>{e.preventDefault();el.classList.add('drop')};el.ondragleave=()=>el.classList.remove('drop');el.ondrop=e=>{e.preventDefault();let n=+e.dataTransfer.getData('text/plain');placeLegend(n,+el.dataset.drop)}});
@@ -447,9 +457,10 @@ function act(a,el){let i=sIdx(),ses=cur();
    case 'finishStudy':finishStudy();break;
    case 'ans':ses.first[+el.dataset.k]=+el.value;break;
    case 'self':ses.self=el.value;break;
+   case 'conf':ses.conf[+el.dataset.k]=el.value;break;
    case 'checkQuiz':{let L=lessonFor(i);if(L.qs.some((q,k)=>ses.first[k]==null)){announce('Answer all three questions first.');let m=scr.querySelector('.scr-row');if(m&&!m.querySelector('.warn'))m.insertAdjacentHTML('beforeend','<span class="small warn" role="status">Answer all three questions first.</span>');break}S.step='feedback';render();announce('Feedback is on the screen.');break}
    case 'rev':ses.second[+el.dataset.k]=+el.value;render();break;
-   case 'nextPhase':if(i<2)startSession(i+1);else{S.phase='profile';render()}break;
+   case 'nextPhase':if(i<2)startSession(i+1);else{S.phase='wrap';S.step='changes';setView('read');render()}break;
    case 'playNarr':speak(S.cfg.narration==='repeat'||(S.step==='setup'&&S.pendingCfg.narration==='repeat')?lessonFor(S.step==='setup'?Math.max(0,i-1):i).spans.join(' '):lessonFor(S.step==='setup'?Math.max(0,i-1):i).narr);break;
    case 'hlMode':S.direct.hlMode=!S.direct.hlMode;render();break;
    case 'addArrow':{let g=n=>scr.querySelector(`[data-arr="${n}"]`).value,f=+g('f')-1,t=+g('t')-1,rel=g('rel');if(f===t){announce('Choose two different parts.');break}S.direct.arrows=S.direct.arrows.filter(x=>!(x.f===f&&x.t===t));S.direct.arrows.push({f,t,rel});render();announce(`Arrow added from ${f+1} to ${t+1}: ${rel}.`);break}
@@ -461,7 +472,11 @@ function act(a,el){let i=sIdx(),ses=cur();
    case 'tr':S.transfer[el.dataset.f]=el.value;break;
    case 'selfrev':S.transfer.self[el.dataset.k]=el.value;break;
    case 'transferCheck':S.transferDone=true;render();break;
-   case 'toReport':S.phase='report';render();break;
+   case 'toReport':S.phase='report';setView('read');render();break;
+   case 'wchg':S.wrap.change=el.value;render();break;
+   case 'wNext':if(S.step==='changes'){S.step='advise';render();adviceArrive()}else if(S.step==='advise'){S.step='plan';render()}break;
+   case 'pickPhone':if(THREEOK&&camera)setView('phone');else $('phoneWrap').classList.remove('off');renderPhone();break;
+   case 'openPlan':if(THREEOK&&camera){setView('note');drawNoteTexture()}else $('noteWrap').classList.remove('off');renderNote();setTimeout(()=>$('planP')?.focus({preventScroll:true}),REDUCED()?0:900);break;
    case 'copyRefl':{let t=reflectionText();(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>{$('copyMsg').textContent='Copied. You can paste it into the chapter reflection.'}).catch(()=>{$('copyMsg').textContent='Copy was blocked by the browser. Use the .txt download instead.'});break}
    case 'exportTxt':download('focus-room-summary.txt',summaryText(),'text/plain');break;
    case 'exportJson':download('focus-room-data.json',JSON.stringify(exportData(),null,2),'application/json');break;
@@ -489,28 +504,37 @@ function hideToast(){$('toast').hidden=true;clearTimeout(toastT)}
 function phoneStatusText(){let p=phoneSnapshot();return p.pose==='box'?'in the storage box':`${p.silenced?'silenced':'notifications on'}, ${p.pose==='stand'?'on its stand next to the monitor':p.away?'away from your reading position':'on the desk near you'}`}
 
 /* ================= Phone, notebook DOM ================= */
-function renderPhone(){let ph=$('phoneUI'),p=phoneState,can=S.phase!=='s1'&&S.phase!=='entry';
+function adviceArrive(){phoneState.lit=true;phoneState.lastNtf=['Jordan & Sam','New messages'];drawPhoneTexture();playNotif({silenced:false,pose:phoneState.pose==='box'?'stand':phoneState.pose});showToast(['Jordan and Sam']);renderPhone()}
+function renderPhone(){if(S.phase==='wrap'&&S.step==='advise'){renderAdvice();return}let ph=$('phoneUI'),p=phoneState,can=S.phase!=='s1'&&S.phase!=='entry';
   let all=(S.study&&S.step==='study'?S.study.ntf:[]),off=Math.max(0,all.length-4),list=all.slice(off);
   ph.innerHTML=`<div class="clock">9:41</div><div class="date">Wednesday</div>${list.length?list.map((n,kk)=>{let k=kk+off;return `<div class="ntf"><small>${esc(n[0])}</small>${p.opened&&p.opened.has(k)?esc(n[1]):'New message'}${p.opened&&p.opened.has(k)?'':`<div><button data-pact="open" data-k="${k}">Open</button></div>`}</div>`}).join(''):`<div class="ntf"><small>No new notifications</small>${p.silenced?'Notifications are silenced.':'Notifications are on.'}</div>`}
    <div class="sp"></div>${can?`<button class="pbtn ${p.silenced?'on':''}" data-pact="silence" aria-pressed="${p.silenced}">${p.silenced?'Notifications silenced':'Silence notifications'}</button>`:''}<button class="pbtn" data-pact="back">Back to ${S.step==='study'?'studying':'the desk'}</button>`}
-$('phoneUI').addEventListener('click',e=>{let b=e.target.closest('[data-pact]');if(!b)return;let a=b.dataset.pact;
+$('phoneUI').addEventListener('click',e=>{let tp=e.target.closest('[data-tip]');if(tp){let w=S.wrap,who=!w.sent.a?'a':'b',sel=w.advice[who],id=tp.dataset.tip;if(sel.includes(id))w.advice[who]=sel.filter(x=>x!==id);else if(sel.length<2)sel.push(id);renderAdvice();return}
+  let b=e.target.closest('[data-pact]');if(!b)return;let a=b.dataset.pact;
+  if(a==='send'){let w=S.wrap,who=!w.sent.a?'a':'b';w.sent[who]=true;renderAdvice();render();announce(`Tips sent to ${MATES[who][0]}.`);return}
   if(a==='open'){let k=+b.dataset.k;phoneState.opened=phoneState.opened||new Set();if(!phoneState.opened.has(k)){phoneState.opened.add(k);if(S.step==='study')cur().ntfOpened++}renderPhone();announce('Message opened.')}
   if(a==='silence'){phoneState.silenced=!phoneState.silenced;if(phoneState.silenced)phoneState.lit=false;drawPhoneTexture();renderPhone();render();announce(phoneState.silenced?'Phone notifications silenced.':'Phone notifications on.')}
-  if(a==='back'){setView('back')}});
-function renderNote(){let n=$('noteUI'),can=S.phase==='s3'&&S.step==='study';
+  if(a==='back'){setView('back');render()}});
+function renderAdvice(){let ph=$('phoneUI'),w=S.wrap,who=!w.sent.a?'a':!w.sent.b?'b':null;
+  if(!who){ph.innerHTML=`<div class="date" style="margin-top:8px">Messages</div>${['a','b'].map(x=>`<div class="bubble"><b>${MATES[x][0]}</b>: Thanks!</div>`).join('')}<div class="sp"></div><button class="pbtn" data-pact="back">Back to the computer</button>`;return}
+  let sel=w.advice[who];
+  ph.innerHTML=`<div class="date" style="margin-top:4px">${MATES[who][0]}</div><div class="bubble">${esc(MATES[who][1])}</div><small style="color:#a8bcc8">Choose two tips to send (${sel.length}/2)</small><div class="tips">${TIPS.map(([id,t])=>`<button class="tip" data-tip="${id}" aria-pressed="${sel.includes(id)}">${esc(t)}</button>`).join('')}</div><button class="pbtn on" data-pact="send" ${sel.length===2?'':'disabled'}>Send to ${MATES[who][0]}</button><button class="pbtn" data-pact="back">Back to the computer</button>`}
+function renderNote(){if(S.phase==='wrap'&&S.step==='plan'){let n=$('noteUI'),pl=S.wrap.plan;
+    n.innerHTML=`<h4>My plan</h4><label class="small" for="planP">I will protect my attention by…</label><textarea id="planP" style="flex:none;height:84px" data-plan="protect">${esc(pl.protect)}</textarea><label class="small" for="planD">I will direct my attention by…</label><textarea id="planD" style="flex:none;height:84px" data-plan="direct">${esc(pl.direct)}</textarea><label class="small" for="planE">I will know it worked if…</label><textarea id="planE" style="flex:none;height:84px" data-plan="evidence">${esc(pl.evidence)}</textarea><div style="flex:1"></div><div><button class="btn" data-nact="back">Back to the computer</button></div>`;
+    n.querySelectorAll('[data-plan]').forEach(t=>t.oninput=()=>{S.wrap.plan[t.dataset.plan]=t.value;drawNoteTexture()});return}let n=$('noteUI'),can=S.phase==='s3'&&S.step==='study';
   n.innerHTML=`<h4>Notes</h4>${can?`<label class="small" for="noteTx">Write the relation in your own words.</label><textarea id="noteTx" aria-label="Notebook">${esc(S.direct.note)}</textarea>`:`<p>${S.direct.note?esc(S.direct.note):'This notebook will be useful later in the session.'}</p><div style="flex:1"></div>`}<div><button class="btn" data-nact="back">Back to ${can?'studying':'the desk'}</button></div>`;
   let t=$('noteTx');if(t)t.oninput=()=>{S.direct.note=t.value;drawNoteTexture()}}
-$('noteUI').addEventListener('click',e=>{let b=e.target.closest('[data-nact]');if(b)setView('back')});
+$('noteUI').addEventListener('click',e=>{let b=e.target.closest('[data-nact]');if(b){setView('back');render();drawNoteTexture()}});
 function openNotebook(){S.direct.noteOpened=true;setView('note');setTimeout(()=>$('noteTx')?.focus({preventScroll:true}),REDUCED()?0:900)}
 
 /* ================= Records ================= */
-function exportData(){return{activity:'Personal Learning Lab · Focus Room · Episode I',chapter:2,version:'1.0',date:new Date().toISOString().slice(0,10),lessonOrder:S.order,
-  sessions:S.sessions.map((s,i)=>{let L=LESSONS[s.lesson||S.order[i]];return{session:i+1,lesson:L.title,setup:s.cfg?cfgKeys(s.cfg,s.phone):null,phone:s.phone,notifications:{shown:s.ntfShown,opened:s.ntfOpened},feedReopened:s.feedOpened,selfRating:s.self,
-   answers:L.qs.map((q,k)=>({type:q.t,firstAttemptCorrect:s.first[k]===q.a,revisedCorrect:s.second[k]==null?null:s.second[k]===q.a})),directing:s.direct||null}}),
-  profile:S.profile,integrativeCheck:{protect:S.transfer.protect,direct:S.transfer.direct,adaptBeginners:S.transfer.adaptA,adaptExperienced:S.transfer.adaptB,justification:S.transfer.why,selfReview:S.transfer.self},commitment:S.commitment}}
-function reflectionText(){return `Focus Room · Episode I\nMy commitment: ${S.commitment||'(not written yet)'}\nProfile justification: ${S.profile.why||'—'}\nIntegrative check: ${S.transfer.why||'—'}`}
-function summaryText(){let d=exportData(),l=[d.activity,`Date: ${d.date}`,''];d.sessions.forEach(s=>{l.push(`Session ${s.session} (${s.lesson})`);if(s.setup)l.push('  Setup: '+Object.entries(s.setup).map(([k,v])=>`${k} ${v}`).join('; '));l.push(`  Phone alerts shown/opened: ${s.notifications.shown}/${s.notifications.opened}`);s.answers.forEach(a=>l.push(`  ${a.type}: ${a.firstAttemptCorrect?'correct':'incorrect'} on first attempt${a.revisedCorrect!=null?`; revision ${a.revisedCorrect?'correct':'incorrect'}`:''}`))});
-  l.push('',reflectionText(),'','This summary describes actions in a formative activity. It is not a measure of attention or of future retention.');return l.join('\n')}
+function exportData(){return{activity:'Personal Learning Lab · Focus Room · Episode I',chapter:2,version:'1.1',date:new Date().toISOString().slice(0,10),lessonOrder:S.order,
+  sessions:S.sessions.map((s,i)=>{let L=LESSONS[s.lesson||S.order[i]];return{session:i+1,lesson:L.title,setup:s.cfg?cfgKeys(s.cfg,s.phone):null,phone:s.phone,notifications:{shown:s.ntfShown,opened:s.ntfOpened},feedReopened:s.feedOpened,
+   answers:L.qs.map((q,k)=>({type:q.t,confidence:s.conf[k]||null,firstAttemptCorrect:s.first[k]===q.a,revisedCorrect:s.second[k]==null?null:s.second[k]===q.a})),directing:s.direct||null}}),
+  biggestChange:{choice:S.wrap.change,why:S.wrap.why},advice:{beginner:S.wrap.advice.a,experienced:S.wrap.advice.b},plan:S.wrap.plan}}
+function reflectionText(){let p=S.wrap.plan;return `Focus Room · Episode I\nI will protect my attention by: ${p.protect||'—'}\nI will direct my attention by: ${p.direct||'—'}\nI will know it worked if: ${p.evidence||'—'}\nBiggest difference for me: ${(usedChanges().find(x=>x[0]===S.wrap.change)||['','—'])[1]}. ${S.wrap.why}`}
+function summaryText(){let d=exportData(),l=[d.activity,`Date: ${d.date}`,''];d.sessions.forEach(s=>{l.push(`Session ${s.session} (${s.lesson})`);if(s.setup)l.push('  Setup: '+Object.entries(s.setup).map(([k,v])=>`${k} ${v}`).join('; '));l.push(`  Phone alerts shown/opened: ${s.notifications.shown}/${s.notifications.opened}`);s.answers.forEach(a=>l.push(`  ${a.type}: ${a.firstAttemptCorrect?'correct':'incorrect'} on first attempt${a.confidence?` (${a.confidence})`:''}${a.revisedCorrect!=null?`; revision ${a.revisedCorrect?'correct':'incorrect'}`:''}`))});
+  l.push('',`Advice to a beginner: ${d.advice.beginner.join(', ')||'—'}`,`Advice to an experienced learner: ${d.advice.experienced.join(', ')||'—'}`,'',reflectionText(),'','This summary describes actions in a formative activity. It is not a measure of attention or of future retention.');return l.join('\n')}
 function download(name,text,type){let u=URL.createObjectURL(new Blob([text],{type}));let a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),1500)}
 
 /* ================= 3D room ================= */
@@ -604,9 +628,9 @@ function drawPhoneTexture(){if(!phoneCtx)return;let g=phoneCtx,p=phoneState;g.cl
   else if(p.silenced){g.fillStyle='#cfaa65';g.font='700 40px Arial';g.textAlign='center';g.fillText('☾',128,270)}
   phoneTex.needsUpdate=true}
 function drawNoteTexture(){if(!noteCtx)return;let g=noteCtx;g.fillStyle='#fffdf6';g.fillRect(0,0,384,512);g.strokeStyle='#cfe0ea';for(let y=40;y<512;y+=28){g.beginPath();g.moveTo(0,y);g.lineTo(384,y);g.stroke()}g.strokeStyle='#e5a3a3';g.beginPath();g.moveTo(40,0);g.lineTo(40,512);g.stroke();
-  g.fillStyle='#1f3442';g.font='22px Georgia';let words=(S&&S.direct.note||'').split(/\s+/),line='',y=62;for(const w of words){let t=line?line+' '+w:w;if(g.measureText(t).width>310&&line){g.fillText(line,52,y);y+=28;line=w;if(y>500)break}else line=t}if(line&&y<=500)g.fillText(line,52,y);noteTex.needsUpdate=true}
+  g.fillStyle='#1d3f63';g.font="600 27px Caveat,'Segoe Print',cursive";let src=view==='note'?'':S&&(S.phase==='wrap'||S.phase==='report')&&(S.wrap.plan.protect||S.wrap.plan.direct)?[S.wrap.plan.protect,S.wrap.plan.direct,S.wrap.plan.evidence].filter(Boolean).join(' · '):(S&&S.direct.note||''),words=src.split(/\s+/),line='',y=62;for(const w of words){let t=line?line+' '+w:w;if(g.measureText(t).width>316&&line){g.fillText(line,52,y);y+=28;line=w;if(y>500)break}else line=t}if(line&&y<=500)g.fillText(line,52,y);noteTex.needsUpdate=true}
 function drawMonitorTexture(){if(!monCtx||!S)return;let g=monCtx;g.fillStyle='#f7f9fa';g.fillRect(0,0,1024,542);g.fillStyle='#0f2c40';g.fillRect(0,0,1024,34);g.fillStyle='#fff';g.font='700 18px Arial';g.fillText('Focus Room',14,23);
-  let titles={entry:'Welcome to your study room',s1:'Session 1 · Experience the problem',s2:'Session 2 · Protect your attention',s3:'Session 3 · Direct your attention',profile:'Build your learning profile',transfer:'Integrative check',report:'Session report'};
+  let titles={entry:'Welcome to your study room',s1:'Session 1 · Experience the problem',s2:'Session 2 · Protect your attention',s3:'Session 3 · Direct your attention',wrap:'Build your learning profile',report:'Session report'};
   g.fillStyle='#092f49';g.font='700 46px Georgia';g.fillText(titles[S.phase],48,170);g.fillStyle='#33444f';g.font='28px Arial';g.fillText('Sit at the desk and look at the screen to continue.',48,232);monTex.needsUpdate=true}
 
 /* ---- First-person camera: walk around the room, sit at the desk ---- */
@@ -738,6 +762,7 @@ function goFlat(){THREEOK=false;stage.classList.add('flat');stage.style.height='
 
 /* ================= Boot ================= */
 S=freshState();
+if(document.fonts&&document.fonts.load)document.fonts.load("600 27px Caveat").then(()=>{if(typeof drawNoteTexture==='function')drawNoteTexture()}).catch(()=>{});
 if(THREEOK&&init3D()){if(window.THREE.GLTFLoader)loadRoom();else{$('loadMsg').textContent='The 3D loader is unavailable. The activity continues in text mode.';setTimeout(goFlat,1200)}}
 else goFlat();
 render();
