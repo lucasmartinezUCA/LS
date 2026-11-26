@@ -40,7 +40,7 @@ html,body{margin:0;padding:0;background:transparent;font-family:"DM Sans",Arial,
 #plab .stage.flat .glue.off{display:none}
 #plab .glue.passive{pointer-events:none}
 /* Monitor screen */
-#plab .screen{width:840px;height:457px;background:#f7f9fa;color:var(--text);font-size:15px;line-height:1.45;display:flex;flex-direction:column;border-radius:3px}
+#plab .screen{width:840px;height:444px;background:#f7f9fa;color:var(--text);font-size:15px;line-height:1.45;display:flex;flex-direction:column;border-radius:3px}
 #plab .glue.enlarged{transform:none!important;left:0;top:50px;width:100%;height:calc(100% - 50px);z-index:7;border-radius:0 0 14px 14px}
 #plab .glue.enlarged .screen{width:100%;height:100%}
 #plab .stage.flat .screen{width:100%;max-width:900px;height:auto;min-height:420px}
@@ -145,6 +145,7 @@ html,body{margin:0;padding:0;background:transparent;font-family:"DM Sans",Arial,
   #plab .tools{gap:4px}
   #plab .tools button{font-size:.72rem;padding:5px 9px}
   #plab #enlargeBtn,#plab #motionBtn{display:none}
+  #plab .glue.enlarged{top:84px;height:calc(100% - 84px)}
   #plab .stage{height:clamp(480px,130cqw,720px)}
   #plab .glue.enlarged .lesson,#plab .glue.enlarged .grid2,#plab .stage.flat .lesson,#plab .stage.flat .grid2{grid-template-columns:1fr}
   #plab .glue.enlarged .withfeed,#plab .stage.flat .withfeed{flex-direction:column}
@@ -161,14 +162,14 @@ html,body{margin:0;padding:0;background:transparent;font-family:"DM Sans",Arial,
   <p class="note">About 12–18 minutes. No time limit. Your answers stay in this browser unless you export them.</p>
 </div>
 <div class="stage" id="stage">
-  <canvas id="world" aria-label="Three-dimensional study room with a desk, a computer monitor, a phone, a notebook and a storage box. All tasks are on the monitor; the same actions are listed under Text and keyboard controls."></canvas>
+  <canvas id="world" tabindex="0" aria-label="First-person view of a study room with a bed, a desk, a computer, a phone, a notebook and a storage box. Walk with W A S D or the arrow keys, drag to look around and select the chair to sit. The same actions are listed under Text and keyboard controls."></canvas>
   <div class="glue off" id="scrWrap"><div class="screen" id="screen" role="region" aria-label="Computer screen"></div></div>
   <div class="glue off" id="phoneWrap"><div class="phone" id="phoneUI" role="region" aria-label="Phone screen"></div></div>
   <div class="glue off" id="noteWrap"><div class="notebook" id="noteUI" role="region" aria-label="Notebook page"></div></div>
   <div class="tools" role="toolbar" aria-label="View controls">
-    <button type="button" data-view="room">Room</button>
-    <button type="button" data-view="desk">Desk</button>
-    <button type="button" data-view="screen">Screen</button>
+    <button type="button" data-view="toggle" id="sitBtn">Sit at the desk</button>
+    <button type="button" data-view="desk" id="deskBtn" hidden>Look at the desk</button>
+    <button type="button" data-view="screen">Look at the screen</button>
     <button type="button" id="enlargeBtn" aria-pressed="false">Enlarge screen</button>
     <button type="button" id="motionBtn" aria-pressed="false">Reduce motion</button>
     <button type="button" id="restartBtn">Restart</button>
@@ -179,13 +180,13 @@ html,body{margin:0;padding:0;background:transparent;font-family:"DM Sans",Arial,
 </div>
 <details class="alt" id="alt"><summary>Text and keyboard controls</summary>
   <p>Every task appears on the computer screen. These buttons give the same access to the room and its objects without using the 3D view.</p>
-  <div class="row"><b style="align-self:center">Views:</b><button type="button" data-view="room">Room</button><button type="button" data-view="desk">Desk</button><button type="button" data-view="screen">Screen</button><button type="button" id="altEnlarge">Show the screen enlarged</button></div>
+  <div class="row"><b style="align-self:center">Position:</b><button type="button" data-view="screen">Sit and look at the screen</button><button type="button" data-view="desk">Sit and look at the desk</button><button type="button" data-view="stand">Stand up</button><button type="button" data-view="room">Go back to the door</button><button type="button" id="altEnlarge">Show the screen enlarged</button></div>
   <div class="row"><b style="align-self:center">Phone:</b><button type="button" id="altPhoneOpen">Open the phone</button><button type="button" id="altPhoneMove">Put the phone in the storage box</button><button type="button" id="altPhoneStand">Return the phone to its stand</button></div>
   <div class="row"><b style="align-self:center">Notebook:</b><button type="button" id="altNote">Open the notebook</button></div>
   <div class="row"><b style="align-self:center">Tutorial:</b><button type="button" id="altMug">Move the mug</button><b style="align-self:center;margin-left:10px">Motion:</b><button type="button" id="altMotion">Reduce motion</button></div>
   <p id="altStatus" class="small"></p>
 </details>
-<div class="foot"><span>Formative learning activity · No time limit · No automatic submission to the LMS</span><span>Room model: <a href="https://sketchfab.com/3d-models/workroomstudyroom-657ee9bf11734f65a25b1f31a44ef71d" target="_blank" rel="noopener">workroom/study/room</a> by <a href="https://sketchfab.com/mrdt.club" target="_blank" rel="noopener">MrdT</a>, <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>. Changes: compressed textures and geometry, cutaway view, original phone replaced, phone, stand, notebook and storage box added.</span></div>
+<div class="foot"><span>Formative learning activity · No time limit · No automatic submission to the LMS</span><span>Room model: <a href="https://sketchfab.com/3d-models/workroomstudyroom-657ee9bf11734f65a25b1f31a44ef71d" target="_blank" rel="noopener">workroom/study/room</a> by <a href="https://sketchfab.com/mrdt.club" target="_blank" rel="noopener">MrdT</a>, <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>. Changes: compressed textures and geometry, brand logo covered, original phone replaced, phone, stand, notebook and storage box added.</span></div>
 <div id="live" class="sr" aria-live="polite" aria-atomic="true"></div>
 </section>
 <script>
@@ -233,7 +234,7 @@ const TRANSFER={
 /* ================= State ================= */
 let S;
 function freshState(){return{
-  phase:'entry',step:'welcome',order:shuffle(['A','B','C']),tut:{monitor:false,moved:false,returned:false},
+  phase:'entry',step:'welcome',order:shuffle(['A','B','C']),tut:{walked:false,seated:false,moved:false},
   cfg:baseCfg(),pendingCfg:null,
   phone:{pose:'stand',silenced:false,x:0,z:0},
   sessions:[newSession(),newSession(),newSession()],
@@ -268,10 +269,10 @@ function entryScreen(){let t=S.tut;
    <p class="scr-p">Your goal is to explain and apply the ideas, not simply to finish reading. You will study three short texts on this computer, change the conditions between sessions and compare what happens.</p>
    <div class="scr-row"><button class="btn pri" data-act="start">Start Session 1</button></div></div>
    <div class="card"><b>Try the controls</b><ul class="chk">
-   <li class="${t.monitor?'done':''}">Select the monitor to read at the screen.</li>
-   <li class="${t.moved?'done':''}">Choose <b>Desk</b> at the top right and drag the mug a little.</li>
-   <li class="${t.returned?'done':''}">Choose <b>Screen</b> to come back to this page.</li></ul>
-   <p class="small">Room shows the whole room. Desk shows the objects you can move. Screen is your reading position. Enlarge screen shows this page in full size. The tutorial is optional.</p></div></div>`}
+   <li class="${t.walked?'done':''}">Walk around the room with W A S D or the arrow keys, or click the floor.</li>
+   <li class="${t.seated?'done':''}">Select the chair to sit at the desk.</li>
+   <li class="${t.moved?'done':''}">While seated, drag the mug a little.</li></ul>
+   <p class="small">Drag anywhere in the room to look around. Use <b>Stand up</b> at the top to walk again and <b>Look at the screen</b> to come back to this page. Enlarge screen shows this page in full size. The tutorial is optional.</p></div></div>`}
 
 function lessonHTML(L,cfg,opts={}){let st=S.study,hl=S.direct.hl,dir=opts.direct;
   let part=i=>{let state=cfg.legend[i+1],p=L.parts[i],box=`dbox${dir&&hl.has('b'+i)?' hl':''}`;
@@ -472,11 +473,11 @@ function renderPhone(){let ph=$('phoneUI'),p=phoneState,can=S.phase!=='s1'&&S.ph
 $('phoneUI').addEventListener('click',e=>{let b=e.target.closest('[data-pact]');if(!b)return;let a=b.dataset.pact;
   if(a==='open'){let k=+b.dataset.k;phoneState.opened=phoneState.opened||new Set();if(!phoneState.opened.has(k)){phoneState.opened.add(k);if(S.step==='study')cur().ntfOpened++}renderPhone();announce('Message opened.')}
   if(a==='silence'){phoneState.silenced=!phoneState.silenced;if(phoneState.silenced)phoneState.lit=false;drawPhoneTexture();renderPhone();render();announce(phoneState.silenced?'Phone notifications silenced.':'Phone notifications on.')}
-  if(a==='back'){setView(S.step==='study'||S.phase==='entry'?'screen':'desk')}});
+  if(a==='back'){setView('back')}});
 function renderNote(){let n=$('noteUI'),can=S.phase==='s3'&&S.step==='study';
   n.innerHTML=`<h4>Notes</h4>${can?`<label class="small" for="noteTx">Write the relation in your own words.</label><textarea id="noteTx" aria-label="Notebook">${esc(S.direct.note)}</textarea>`:`<p>${S.direct.note?esc(S.direct.note):'This notebook will be useful later in the session.'}</p><div style="flex:1"></div>`}<div><button class="btn" data-nact="back">Back to ${can?'studying':'the desk'}</button></div>`;
   let t=$('noteTx');if(t)t.oninput=()=>{S.direct.note=t.value;drawNoteTexture()}}
-$('noteUI').addEventListener('click',e=>{let b=e.target.closest('[data-nact]');if(b)setView(S.phase==='s3'&&S.step==='study'?'screen':'desk')});
+$('noteUI').addEventListener('click',e=>{let b=e.target.closest('[data-nact]');if(b)setView('back')});
 function openNotebook(){S.direct.noteOpened=true;setView('note');setTimeout(()=>$('noteTx')?.focus({preventScroll:true}),REDUCED()?0:900)}
 
 /* ================= Records ================= */
@@ -493,10 +494,10 @@ function download(name,text,type){let u=URL.createObjectURL(new Blob([text],{typ
 const stage=$('stage'),cv=$('world');
 let THREEOK=!!window.THREE,renderer,scene,camera,ray,ndc,room,clipPlanes,monitorPlane,monTex,monCtx,phoneG,phoneScreen,phoneTex,phoneCtx,stand,boxG,noteG,noteTex,noteCtx,mug,outline,running=true;
 const phoneState={pose:'stand',silenced:false,lit:false,buzz:0,opened:null,x:0,z:0};
-const DESK_Y=37.13,SCREEN={x:104.22,y0:42.75,y1:55.0,z0:-137.75,z1:-115.25};
-const STAND={x:100.6,z:-113.2},BOX={x:100.5,z:-166,w:9,d:7},NOTE={x:95.6,z:-141.6},READ={x:88,z:-126.5};
+const DESK_Y=37.13,SCREEN={x:104.2,y0:43.35,y1:54.45,z0:-137.0,z1:-116.0};
+const STAND={x:100.6,z:-113.2},BOX={x:101,z:-152,w:9,d:7},NOTE={x:95.6,z:-141.6},READ={x:88,z:-126.5};
 let reduceMotion=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;const REDUCED=()=>reduceMotion;
-let view='room',camAnim=null,orbit={yaw:.18,pitch:.82,dist:265},drag=null,hoverObj=null;
+let view='walk',camAnim=null,drag=null,hoverObj=null,mugProxy=null,chairProxy=null;
 function phoneSnapshot(){let away=phoneState.pose==='flat'&&Math.hypot(phoneState.x-READ.x,phoneState.z-READ.z)>34;return{pose:phoneState.pose,silenced:phoneState.silenced,away}}
 
 function canvasTex(w,h){let c=document.createElement('canvas');c.width=w;c.height=h;let t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;t.anisotropy=8;return [c.getContext('2d'),t]}
@@ -516,18 +517,26 @@ function loadRoom(){
   let loader=new THREE.GLTFLoader();if(window.MeshoptDecoder)loader.setMeshoptDecoder(MeshoptDecoder);
   loader.load('room.glb',g=>{room=g.scene;scene.add(room);room.updateMatrixWorld(true);
     let mugParts=[];
-    room.traverse(o=>{if(!o.isMesh)return;(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>{m.clippingPlanes=clipPlanes;m.needsUpdate=true});
-      let b=new THREE.Box3().setFromObject(o);
+    let silver=null;
+    room.traverse(o=>{if(!o.isMesh)return;
+      let b=new THREE.Box3().setFromObject(o),sz=b.getSize(new THREE.Vector3());
+      if(!silver&&o.material&&o.material.color&&o.material.color.getHex()===0xb8b8b8&&b.min.x>102&&b.max.x<109.5)silver=o.material;
+      if(o.visible&&b.max.y>12&&b.min.y<40&&sz.x<75&&sz.z<75&&(sz.x>1.5||sz.z>1.5)&&b.min.x<ROOM.x1+6){const r=6;obstacles.push([b.min.x-r,b.max.x+r,b.min.z-r,b.max.z+r])}
       const inside=r=>b.min.x>=r[0]&&b.min.y>=r[1]&&b.min.z>=r[2]&&b.max.x<=r[3]&&b.max.y<=r[4]&&b.max.z<=r[5];
       if(inside([92.3,36.9,-143.8,98.4,37.8,-140.1]))o.visible=false; /* original phone, replaced by an interactive one */
       if(inside([100.8,36.9,-145,105.8,40.6,-141.2]))mugParts.push(o)});
     mug=new THREE.Group();scene.add(mug);let c=new THREE.Box3();mugParts.forEach(o=>c.expandByObject(o));let ctr=c.getCenter(new THREE.Vector3());mug.position.set(ctr.x,DESK_Y,ctr.z);mug.updateMatrixWorld(true);mugParts.forEach(o=>mug.attach(o));mug.userData={kind:'mug',r:2,home:mug.position.clone()};
+    const ghostM=new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false});
+    mugProxy=new THREE.Mesh(new THREE.BoxGeometry(4.2,5.4,4.2),ghostM);mugProxy.position.y=2.6;mugProxy.userData={kind:'mug'};mug.add(mugProxy);
+    chairProxy=new THREE.Mesh(new THREE.BoxGeometry(24,40,28),ghostM);chairProxy.position.set(93,27,-119);chairProxy.userData={kind:'chair'};scene.add(chairProxy);
+    /* Cover the brand logo on the monitor chin with the monitor's own silver finish */
+    let cover=new THREE.Mesh(new THREE.PlaneGeometry(2.2,1.5),silver?silver.clone():new THREE.MeshStandardMaterial({color:0xb8b8b8,roughness:.4,metalness:.3}));cover.position.set(104.12,41.75,-126.5);cover.rotation.y=-Math.PI/2;scene.add(cover);
     $('loading').hidden=true;setView('room',true);render()},
    x=>{if(x.total){$('prog').value=Math.round(x.loaded/x.total*100)}},
    err=>{$('loadMsg').textContent='The 3D room could not be loaded. The activity continues in text mode.';setTimeout(()=>{$('loading').hidden=true;goFlat()},1400)})}
 function buildProps(){
   /* Monitor screen plane (texture used when the live screen is not shown) */
-  [monCtx,monTex]=canvasTex(1024,558);
+  [monCtx,monTex]=canvasTex(1024,542);
   monitorPlane=new THREE.Mesh(new THREE.PlaneGeometry(SCREEN.z1-SCREEN.z0,SCREEN.y1-SCREEN.y0),new THREE.MeshBasicMaterial({map:monTex,toneMapped:false}));
   monitorPlane.position.set(SCREEN.x-.04,(SCREEN.y0+SCREEN.y1)/2,(SCREEN.z0+SCREEN.z1)/2);monitorPlane.rotation.y=-Math.PI/2;monitorPlane.userData={kind:'monitor'};scene.add(monitorPlane);
   /* Phone and stand */
@@ -556,29 +565,45 @@ function drawPhoneTexture(){if(!phoneCtx)return;let g=phoneCtx,p=phoneState;g.fi
   phoneTex.needsUpdate=true}
 function drawNoteTexture(){if(!noteCtx)return;let g=noteCtx;g.fillStyle='#fffdf6';g.fillRect(0,0,384,512);g.strokeStyle='#cfe0ea';for(let y=40;y<512;y+=28){g.beginPath();g.moveTo(0,y);g.lineTo(384,y);g.stroke()}g.strokeStyle='#e5a3a3';g.beginPath();g.moveTo(40,0);g.lineTo(40,512);g.stroke();
   g.fillStyle='#1f3442';g.font='22px Georgia';let words=(S&&S.direct.note||'').split(/\s+/),line='',y=62;for(const w of words){let t=line?line+' '+w:w;if(g.measureText(t).width>310&&line){g.fillText(line,52,y);y+=28;line=w;if(y>500)break}else line=t}if(line&&y<=500)g.fillText(line,52,y);noteTex.needsUpdate=true}
-function drawMonitorTexture(){if(!monCtx||!S)return;let g=monCtx;g.fillStyle='#f7f9fa';g.fillRect(0,0,1024,558);g.fillStyle='#0f2c40';g.fillRect(0,0,1024,34);g.fillStyle='#fff';g.font='700 18px Arial';g.fillText('Focus Room',14,23);
+function drawMonitorTexture(){if(!monCtx||!S)return;let g=monCtx;g.fillStyle='#f7f9fa';g.fillRect(0,0,1024,542);g.fillStyle='#0f2c40';g.fillRect(0,0,1024,34);g.fillStyle='#fff';g.font='700 18px Arial';g.fillText('Focus Room',14,23);
   let titles={entry:'Welcome to your study room',s1:'Session 1 · Experience the problem',s2:'Session 2 · Protect your attention',s3:'Session 3 · Direct your attention',profile:'Build your learning profile',transfer:'Integrative check',report:'Session report'};
-  g.fillStyle='#092f49';g.font='700 46px Georgia';g.fillText(titles[S.phase],48,170);g.fillStyle='#33444f';g.font='28px Arial';g.fillText('Select the monitor or choose Screen to read.',48,232);monTex.needsUpdate=true}
+  g.fillStyle='#092f49';g.font='700 46px Georgia';g.fillText(titles[S.phase],48,170);g.fillStyle='#33444f';g.font='28px Arial';g.fillText('Sit at the desk and look at the screen to continue.',48,232);monTex.needsUpdate=true}
 
-/* ---- Views and camera ---- */
+/* ---- First-person camera: walk around the room, sit at the desk ---- */
+const FLOOR=6.61,EYE_STAND=FLOOR+60,ROOM={x0:14,x1:86,z0:-188,z1:-24};
+let fp={pos:new THREE.Vector3(76,EYE_STAND,-44),yaw:-1.25,pitch:-.1,prev:'walk',prevPose:null},keys={},walkTo=null,obstacles=[],lastNow=0;
+function fwd(yaw,pitch){return new THREE.Vector3(Math.cos(pitch)*Math.cos(yaw),Math.sin(pitch),Math.cos(pitch)*Math.sin(yaw))}
+function seatPos(){return new THREE.Vector3(SCREEN.x-26.6,47.6,-124.7)}
+function pose(pos,yaw,pitch,fov){return{pos:pos.clone(),tgt:pos.clone().add(fwd(yaw,pitch)),yaw,pitch,fov}}
 const VIEWS={
-  room:()=>{let t=new THREE.Vector3(62,20,-106),o=orbit;return{pos:new THREE.Vector3(t.x-Math.cos(o.pitch)*Math.cos(o.yaw)*o.dist,t.y+Math.sin(o.pitch)*o.dist,t.z+Math.cos(o.pitch)*Math.sin(o.yaw)*o.dist),tgt:t,fov:40}},
-  desk:()=>{let a=camera?camera.aspect:1.7,dist=Math.max(66,35/(Math.tan(21*Math.PI/180)*a)),dir=new THREE.Vector3(-43,50,0).normalize(),t=new THREE.Vector3(99,36,a<1?-139:-134);return{pos:t.clone().add(dir.multiplyScalar(dist)),tgt:t,fov:42}},
-  screen:()=>{let a=camera?camera.aspect:1.7,h=(SCREEN.y1-SCREEN.y0)+8.2,w=(SCREEN.z1-SCREEN.z0)+3,fov=42,tv=Math.tan(fov*Math.PI/360),d=Math.max(h/2/tv,w/2/(tv*a));let cy=(SCREEN.y0-5.6+SCREEN.y1+2.6)/2;return{pos:new THREE.Vector3(SCREEN.x-d,cy+1.2,(SCREEN.z0+SCREEN.z1)/2+1.8),tgt:new THREE.Vector3(SCREEN.x,cy,(SCREEN.z0+SCREEN.z1)/2+1.8),fov}},
   phone:()=>{let p=phoneScreen.getWorldPosition(new THREE.Vector3()),q=phoneScreen.getWorldQuaternion(new THREE.Quaternion()),n=new THREE.Vector3(0,0,1).applyQuaternion(q);let a=camera.aspect,d=Math.max(7.4,(a<1?5.2/a:0)+3);return{pos:p.clone().add(n.multiplyScalar(d)),tgt:p,fov:42,up:new THREE.Vector3(0,1,0).applyQuaternion(q)}},
   note:()=>{let p=noteG.getWorldPosition(new THREE.Vector3());let a=camera.aspect,d=Math.max(12.5,a<1?10/a:0);return{pos:new THREE.Vector3(p.x-.01,p.y+d,p.z),tgt:p,fov:42,up:new THREE.Vector3(1,0,0)}}};
-function setView(v,instant){if(!THREEOK||!camera){view=v;layoutGlue();return}
-  if(v==='screen'&&S.phase==='entry'){S.tut.monitor=true;if(S.tut.moved)S.tut.returned=true}
-  view=v;let goal=VIEWS[v]();camera.up.copy(goal.up||new THREE.Vector3(0,1,0));
-  if(instant||REDUCED()){camera.position.copy(goal.pos);camera.fov=goal.fov;camera.updateProjectionMatrix();camera.lookAt(goal.tgt);camAnim=null}
-  else{let look=new THREE.Vector3();camera.getWorldDirection(look);camAnim={t:0,p0:camera.position.clone(),q0:camera.quaternion.clone(),f0:camera.fov,goal}}
-  document.querySelectorAll('[data-view]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.view===v));
-  if(S&&S.phase==='entry')render();layoutGlue();updateCue()}
-function resize(){if(!renderer)return;let w=stage.clientWidth,h=stage.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();if(!camAnim&&view!=='room'){let g=VIEWS[view]();camera.position.copy(g.pos);camera.fov=g.fov;camera.updateProjectionMatrix();camera.lookAt(g.tgt)}}
-function loop(now){requestAnimationFrame(loop);if(!running||!renderer)return;
-  if(camAnim){let a=camAnim;a.t=Math.min(1,a.t+1/48);let e=a.t<.5?2*a.t*a.t:1-Math.pow(-2*a.t+2,2)/2;let g=a.goal;camera.position.lerpVectors(a.p0,g.pos,e);
-    let m=new THREE.Matrix4().lookAt(g.pos,g.tgt,camera.up);let q1=new THREE.Quaternion().setFromRotationMatrix(m);camera.quaternion.copy(a.q0).slerp(q1,e);camera.fov=a.f0+(g.fov-a.f0)*e;camera.updateProjectionMatrix();if(a.t>=1)camAnim=null}
-  else if(view==='room'){let g=VIEWS.room();camera.position.copy(g.pos);camera.lookAt(g.tgt)}
+function setView(v,instant){if(!THREEOK||!camera){view=v==='phone'||v==='note'?v:'seat';layoutGlue();return}
+  let goal;
+  if(v==='phone'||v==='note'){if(view==='walk'||view==='seat'){fp.prev=view;fp.prevPose={pos:fp.pos.clone(),yaw:fp.yaw,pitch:fp.pitch}}goal=VIEWS[v]();view=v}
+  else if(v==='back'){let pp=fp.prevPose||{pos:seatPos(),yaw:0,pitch:-.02};goal=pose(pp.pos,pp.yaw,pp.pitch,fp.prev==='seat'?42:60);view=fp.prev}
+  else if(v==='room'){goal=pose(new THREE.Vector3(76,EYE_STAND,-44),-1.25,-.1,60);view='walk'}
+  else if(v==='stand'){goal=pose(new THREE.Vector3(66,EYE_STAND,-121),0,-.28,60);view='walk'}
+  else{goal=v==='desk'?pose(seatPos(),-.32,-.45,62):pose(seatPos(),0,-.015,42);view='seat';if(S.phase==='entry'&&!S.tut.seated){S.tut.seated=true;render()}}
+  walkTo=null;camera.up.copy(goal.up||new THREE.Vector3(0,1,0));
+  if(instant||REDUCED()){camera.position.copy(goal.pos);camera.fov=goal.fov;camera.updateProjectionMatrix();camera.lookAt(goal.tgt);camAnim=null;endPose(goal)}
+  else camAnim={t:0,p0:camera.position.clone(),q0:camera.quaternion.clone(),f0:camera.fov,goal};
+  updateTools();layoutGlue();updateCue()}
+function endPose(g){if(g.yaw!=null){fp.pos.copy(g.pos);fp.yaw=g.yaw;fp.pitch=g.pitch}}
+function resize(){if(!renderer)return;let w=stage.clientWidth,h=stage.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();if(!camAnim&&(view==='phone'||view==='note')){let g=VIEWS[view]();camera.position.copy(g.pos);camera.lookAt(g.tgt)}}
+function collide(p){p.x=Math.max(ROOM.x0,Math.min(ROOM.x1,p.x));p.z=Math.max(ROOM.z0,Math.min(ROOM.z1,p.z));
+  for(const o of obstacles){if(p.x>o[0]&&p.x<o[1]&&p.z>o[2]&&p.z<o[3]){let d=[p.x-o[0],o[1]-p.x,p.z-o[2],o[3]-p.z],m=Math.min(...d);if(m===d[0])p.x=o[0];else if(m===d[1])p.x=o[1];else if(m===d[2])p.z=o[2];else p.z=o[3]}}}
+function moveStep(dt){let f=fwd(fp.yaw,0),r=new THREE.Vector3(-f.z,0,f.x),mv=new THREE.Vector3(),sp=46*dt;
+  if(keys.KeyW||keys.ArrowUp)mv.add(f);if(keys.KeyS||keys.ArrowDown)mv.sub(f);if(keys.KeyD)mv.add(r);if(keys.KeyA)mv.sub(r);
+  if(keys.ArrowLeft)fp.yaw-=1.6*dt;if(keys.ArrowRight)fp.yaw+=1.6*dt;
+  if(mv.lengthSq()){walkTo=null;mv.normalize().multiplyScalar(sp)}
+  else if(walkTo){let d=new THREE.Vector3(walkTo.x-fp.pos.x,0,walkTo.z-fp.pos.z),L=d.length();if(L<1.5)walkTo=null;else mv.copy(d.multiplyScalar(Math.min(sp,L)/L))}
+  if(mv.lengthSq()){let before=fp.pos.clone();fp.pos.add(mv);collide(fp.pos);if(walkTo&&before.distanceTo(fp.pos)<sp*.15)walkTo=null;if(S.phase==='entry'&&!S.tut.walked){S._walk=(S._walk||0)+mv.length();if(S._walk>30){S.tut.walked=true;render()}}}}
+function facingScreen(deg=32){let c=new THREE.Vector3(SCREEN.x,(SCREEN.y0+SCREEN.y1)/2,(SCREEN.z0+SCREEN.z1)/2).sub(camera.position).normalize(),d=new THREE.Vector3();camera.getWorldDirection(d);return d.dot(c)>Math.cos(deg*Math.PI/180)}
+function loop(now){requestAnimationFrame(loop);if(!running||!renderer)return;let dt=lastNow?Math.min(.1,(now-lastNow)/1000):1/60;lastNow=now;
+  if(camAnim){let a=camAnim;a.t=Math.min(1,a.t+dt/.85);let e=a.t<.5?2*a.t*a.t:1-Math.pow(-2*a.t+2,2)/2;let g=a.goal;camera.position.lerpVectors(a.p0,g.pos,e);
+    let m=new THREE.Matrix4().lookAt(g.pos,g.tgt,camera.up);let q1=new THREE.Quaternion().setFromRotationMatrix(m);camera.quaternion.copy(a.q0).slerp(q1,e);camera.fov=a.f0+(g.fov-a.f0)*e;camera.updateProjectionMatrix();if(a.t>=1){camAnim=null;endPose(g);updateCue()}}
+  else if(view==='walk'||view==='seat'){if(view==='walk')moveStep(dt);camera.position.copy(fp.pos);camera.up.set(0,1,0);camera.lookAt(fp.pos.clone().add(fwd(fp.yaw,fp.pitch)))}
   if(phoneState.buzz>0&&!REDUCED()){phoneState.buzz-=.02;let k=Math.sin(now*.09)*.12*phoneState.buzz;placePhone();phoneG.position.x+=k}else if(phoneState.buzz>0){phoneState.buzz=0}
   renderer.render(scene,camera);layoutGlue()}
 /* ---- DOM surfaces glued to 3D quads (projective transform) ---- */
@@ -591,42 +616,46 @@ function projectPts(pts){let w=stage.clientWidth,h=stage.clientHeight,out=[];for
 function glue(el,pts,w,h,show){if(!show||!pts){el.classList.add('off');return 0}el.classList.remove('off');let m=proj2(w,h,pts.map(v=>Math.round(v*4)/4));if(el._m!==m){el._m=m;el.style.transform=m}let dx=pts[2]-pts[0];return Math.abs(dx)}
 function layoutGlue(){if(!S)return;let sw=$('scrWrap'),pw=$('phoneWrap'),nw=$('noteWrap');
   if(!THREEOK||!camera||stage.classList.contains('flat')){sw.classList.remove('off');return}
-  let moving=!!camAnim,narrow=stage.clientWidth<700,enl=view!=='phone'&&view!=='note'&&(S.enlarged&&view!=='room'||narrow&&view==='screen');sw.classList.toggle('passive',view==='desk'&&!enl);
+  let moving=!!camAnim,narrow=stage.clientWidth<700,facing=view==='seat'&&!moving&&facingScreen(),enl=view==='seat'&&!moving&&(S.enlarged||narrow&&facingScreen(14));
   sw.classList.toggle('enlarged',enl);
   if(enl){sw.classList.remove('off');sw.style.transform='';sw._m=''}
-  else{let pts=view==='room'||moving?null:projectPts([new THREE.Vector3(SCREEN.x,SCREEN.y1,SCREEN.z0),new THREE.Vector3(SCREEN.x,SCREEN.y1,SCREEN.z1),new THREE.Vector3(SCREEN.x,SCREEN.y0,SCREEN.z0),new THREE.Vector3(SCREEN.x,SCREEN.y0,SCREEN.z1)]);glue(sw,pts,840,457,(view==='screen'||view==='desk')&&!!pts)}
+  else{let pts=!facing?null:projectPts([new THREE.Vector3(SCREEN.x,SCREEN.y1,SCREEN.z0),new THREE.Vector3(SCREEN.x,SCREEN.y1,SCREEN.z1),new THREE.Vector3(SCREEN.x,SCREEN.y0,SCREEN.z0),new THREE.Vector3(SCREEN.x,SCREEN.y0,SCREEN.z1)]);glue(sw,pts,840,444,!!pts)}
   if(view==='phone'&&!moving){let l=new THREE.Vector3(),c=[[-1.325,2.75],[1.325,2.75],[-1.325,-2.75],[1.325,-2.75]].map(([x,y])=>phoneScreen.localToWorld(l.set(x,y,0.01).clone()));glue(pw,projectPts(c),260,540,true)}else pw.classList.add('off');
   if(view==='note'&&!moving){let page=noteG.children[1],c=[[-3,4],[3,4],[-3,-4],[3,-4]].map(([x,y])=>page.localToWorld(new THREE.Vector3(x,y,.01)));glue(nw,projectPts(c),420,560,true)}else nw.classList.add('off')}
-/* ---- Pointer ---- */
+/* ---- Pointer and keyboard ---- */
 function setRay(e){let r=cv.getBoundingClientRect();ndc.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);ray.setFromCamera(ndc,camera)}
-function pickable(){let l=[monitorPlane,phoneG,noteG];if(mug)l.push(mug);return l}
-function hitKind(){let h=ray.intersectObjects(pickable(),true)[0];if(!h)return null;let o=h.object;while(o&&!o.userData.kind)o=o.parent;return o?o:null}
+function pickable(){let l=[monitorPlane,phoneG,noteG];if(mugProxy)l.push(mugProxy);if(view==='walk')l.push(chairProxy);return l}
+function hitKind(){let h=ray.intersectObjects(pickable(),true)[0];if(!h)return null;let o=h.object;while(o&&!o.userData.kind)o=o.parent;return o||null}
 function deskPoint(y=DESK_Y){let p=new THREE.Vector3();return ray.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0,1,0),-y),p)?p:null}
 function canDragPhone(){return S.phase!=='entry'&&S.phase!=='s1'&&!(S.step==='quiz'||S.step==='feedback')}
-function showOutline(o){if(!o){outline.visible=false;return}let b=new THREE.Box3().setFromObject(o),s=b.getSize(new THREE.Vector3()),c=b.getCenter(new THREE.Vector3());outline.scale.set(s.x+.6,s.y+.6,s.z+.6);outline.position.copy(c);outline.visible=true}
-cv.addEventListener('pointerdown',e=>{if(!camera)return;setRay(e);let o=hitKind();cv.setPointerCapture(e.pointerId);
-  if(o&&(o.userData.kind==='phone'||o.userData.kind==='mug')&&view==='desk'){drag={o,kind:o.userData.kind,start:[e.clientX,e.clientY],moved:false,id:e.pointerId};return}
-  if(o){drag={o,kind:o.userData.kind,start:[e.clientX,e.clientY],moved:false,click:true,id:e.pointerId};return}
-  if(view==='room')drag={orbit:true,x:e.clientX,y:e.clientY,yaw:orbit.yaw,pitch:orbit.pitch,id:e.pointerId}});
+function showOutline(o){if(!o){outline.visible=false;return}let t=o.userData.kind==='mug'?mug:o;let b=new THREE.Box3().setFromObject(t),sz=b.getSize(new THREE.Vector3()),c=b.getCenter(new THREE.Vector3());outline.scale.set(sz.x+.6,sz.y+.6,sz.z+.6);outline.position.copy(c);outline.visible=true}
+cv.addEventListener('pointerdown',e=>{if(!camera)return;cv.focus({preventScroll:true});setRay(e);let o=hitKind();cv.setPointerCapture(e.pointerId);let k=o&&o.userData.kind;
+  if((k==='phone'||k==='mug')&&view==='seat'){drag={o:k==='mug'?mug:o,kind:k,start:[e.clientX,e.clientY],moved:false,id:e.pointerId};return}
+  drag={look:true,o,kind:k,x:e.clientX,y:e.clientY,yaw:fp.yaw,pitch:fp.pitch,start:[e.clientX,e.clientY],moved:false,id:e.pointerId}});
 cv.addEventListener('pointermove',e=>{if(!camera)return;setRay(e);
-  if(drag&&drag.id===e.pointerId){if(drag.orbit){orbit.yaw=Math.max(-.6,Math.min(.95,drag.yaw-(e.clientX-drag.x)*.004));orbit.pitch=Math.max(.45,Math.min(1.2,drag.pitch+(e.clientY-drag.y)*.003));return}
-    if(!drag.moved&&Math.hypot(e.clientX-drag.start[0],e.clientY-drag.start[1])>5&&!drag.click){if(drag.kind==='phone'&&!canDragPhone()){announce('The phone stays where it is during this part of the session. Select it to open it.');drag.click=true;return}drag.moved=true}
-    if(drag.moved){let p=deskPoint(DESK_Y+.9);if(p){let x=Math.max(91.5,Math.min(110.5,p.x)),z=Math.max(-185,Math.min(-70,p.z));if(drag.kind==='phone'){phoneG.position.set(x,DESK_Y+1.2,z);phoneG.rotation.set(0,0,0);phoneG.rotation.order='YXZ';phoneG.rotation.y=-Math.PI/2}else{drag.o.position.set(x,DESK_Y+(drag.kind==='mug'?.8:.8),z)}let inBox=Math.abs(x-BOX.x)<BOX.w/2&&Math.abs(z-BOX.z)<BOX.d/2;showOutline(drag.kind==='phone'&&inBox?boxG:null)}}return}
-  let o=hitKind();if(o!==hoverObj){hoverObj=o;let ok=o&&(o.userData.kind!=='monitor'||view!=='screen');showOutline(ok&&o.userData.kind!=='monitor'?o:null);cv.style.cursor=ok?'pointer':view==='room'?'grab':'default'}});
+  if(drag&&drag.id===e.pointerId){let far=Math.hypot(e.clientX-drag.start[0],e.clientY-drag.start[1])>5;
+    if(drag.look){if(far)drag.moved=true;if(drag.moved&&(view==='walk'||view==='seat')&&!camAnim){let lim=view==='seat'?[-1.45,1.45,-1.0,.45]:[-9,9,-1.1,.9];fp.yaw=Math.max(lim[0],Math.min(lim[1],drag.yaw+(e.clientX-drag.x)*.0042));fp.pitch=Math.max(lim[2],Math.min(lim[3],drag.pitch-(e.clientY-drag.y)*.0036))}return}
+    if(!drag.moved&&far){if(drag.kind==='phone'&&!canDragPhone()){announce('The phone stays where it is during this part of the session. Select it to open it.');drag={look:true,x:e.clientX,y:e.clientY,yaw:fp.yaw,pitch:fp.pitch,start:[e.clientX,e.clientY],moved:true,id:e.pointerId};return}drag.moved=true}
+    if(drag.moved){let p=deskPoint(DESK_Y+.9);if(p){let x=Math.max(91.5,Math.min(110.5,p.x)),z=Math.max(-185,Math.min(-70,p.z));if(drag.kind==='phone'){phoneG.position.set(x,DESK_Y+1.2,z);phoneG.rotation.set(0,0,0);phoneG.rotation.order='YXZ';phoneG.rotation.y=-Math.PI/2}else{drag.o.position.set(x,DESK_Y+.8,z)}let inBox=Math.abs(x-BOX.x)<BOX.w/2&&Math.abs(z-BOX.z)<BOX.d/2;showOutline(drag.kind==='phone'&&inBox?boxG:null)}}return}
+  let o=hitKind();if(o!==hoverObj){hoverObj=o;let k=o&&o.userData.kind,ok=o&&!(k==='monitor'&&view==='seat'&&facingScreen());showOutline(ok&&k!=='monitor'?o:null);cv.style.cursor=ok?'pointer':'grab'}});
 cv.addEventListener('pointerup',e=>{if(!drag||drag.id!==e.pointerId)return;let d=drag;drag=null;outline.visible=false;
-  if(d.orbit)return;
+  if(d.look){if(d.moved)return;let k=d.kind;
+    if(k==='monitor'||k==='chair'){setView('screen');return}
+    if(k==='phone'){setView('phone');renderPhone();phoneState.lit=false;drawPhoneTexture();return}
+    if(k==='note'){S.phase==='s3'&&S.step==='study'?openNotebook():setView('note');return}
+    if(k==='mug'){announce('Sit at the desk to move the mug.');return}
+    if(view==='walk'){let p=new THREE.Vector3();if(ray.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0,1,0),-FLOOR),p)){collide(p);walkTo=p}}return}
   if(d.moved){if(d.kind==='phone'){let p=phoneG.position,inBox=Math.abs(p.x-BOX.x)<BOX.w/2&&Math.abs(p.z-BOX.z)<BOX.d/2,onStand=Math.hypot(p.x-STAND.x,p.z-STAND.z)<3;phoneState.pose=inBox?'box':onStand?'stand':'flat';phoneState.x=p.x;phoneState.z=p.z;if(inBox)phoneState.lit=false;placePhone();drawPhoneTexture();announce('Phone '+phoneStatusText()+'.');render()}
-     else{d.o.position.y=DESK_Y+(d.kind==='note'?0:0);if(d.kind==='mug'&&S.phase==='entry'){S.tut.moved=true;render()}}return}
-  let k=d.kind;
-  if(k==='monitor'){setView('screen');return}
-  if(k==='phone'){setView('phone');renderPhone();phoneState.lit=false;drawPhoneTexture();return}
-  if(k==='note'){S.phase==='s3'&&S.step==='study'?openNotebook():setView('note');return}
-  if(k==='mug'&&view!=='desk')setView('desk')});
+     else{d.o.position.y=DESK_Y;if(S.phase==='entry'){S.tut.moved=true;render()}}return}
+  let k=d.kind;if(k==='phone'){setView('phone');renderPhone();phoneState.lit=false;drawPhoneTexture()}else if(k==='mug'){}});
 cv.addEventListener('pointercancel',()=>{drag=null;outline.visible=false;placePhone()});
-
+const typing=()=>{let a=document.activeElement;return a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)};
+cv.addEventListener('keydown',e=>{if(typing())return;if(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code)){e.preventDefault();if(view==='seat'){if(!keys._told){announce('You are seated. Use Stand up to walk around the room.');keys._told=1}return}keys[e.code]=true}});
+cv.addEventListener('keyup',e=>{keys[e.code]=false});cv.addEventListener('blur',()=>{keys={}});
 /* ---- Tools, accessibility controls ---- */
-document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>{setView(b.dataset.view)}));
-$('enlargeBtn').onclick=()=>{S.enlarged=!S.enlarged;$('enlargeBtn').setAttribute('aria-pressed',S.enlarged);$('enlargeBtn').textContent=S.enlarged?'Show the room':'Enlarge screen';if(S.enlarged&&(view==='room'||view==='phone'||view==='note'))setView('screen');layoutGlue();updateCue()};
+document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>{let v=b.dataset.view;if(v==='toggle')v=view==='seat'?'stand':'screen';setView(v)}));
+function updateTools(){let t=$('sitBtn');if(t)t.textContent=view==='seat'?'Stand up':'Sit at the desk';let d=$('deskBtn');if(d)d.hidden=view!=='seat'}
+$('enlargeBtn').onclick=()=>{S.enlarged=!S.enlarged;$('enlargeBtn').setAttribute('aria-pressed',S.enlarged);$('enlargeBtn').textContent=S.enlarged?'Show the room':'Enlarge screen';if(S.enlarged&&view!=='seat')setView('screen');layoutGlue();updateCue()};
 $('altEnlarge').onclick=()=>{if(!S.enlarged)$('enlargeBtn').click();$('screen').querySelector('button,input,textarea,select')?.focus()};
 $('motionBtn').onclick=()=>{reduceMotion=!reduceMotion;$('motionBtn').setAttribute('aria-pressed',reduceMotion)};
 $('motionBtn').setAttribute('aria-pressed',reduceMotion);$('altMotion').onclick=()=>{$('motionBtn').click();$('altMotion').textContent=reduceMotion?'Motion reduced (select to restore)':'Reduce motion';announce(reduceMotion?'Motion reduced.':'Motion restored.')};
@@ -640,8 +669,9 @@ $('altNote').onclick=()=>{if(THREEOK&&camera){S.phase==='s3'&&S.step==='study'?o
 $('altMug').onclick=()=>{if(mug){mug.position.z+=3;}if(S.phase==='entry'){S.tut.moved=true;render()}announce('The mug moved.')};
 function updateAlt(){$('altStatus').textContent=`Phone: ${phoneStatusText()}.`}
 function updateCue(){let c=$('cue');if(!THREEOK||!camera||stage.classList.contains('flat')){c.hidden=true;return}let t='';
-  if(view==='room')t='Drag to look around · Select the monitor to read';else if(view==='desk')t=canDragPhone()?'Drag the phone or the mug · Select an object to use it':'Select an object to use it · Drag the mug to try moving';else if(view==='phone'||view==='note')t='';
-  if(S.enlarged)t='';c.hidden=!t;c.textContent=t}
+  if(view==='walk')t='Drag to look · W A S D or arrow keys to walk · Click the floor to go there · Select the chair to sit';
+  else if(view==='seat')t=canDragPhone()?'Drag to look around · Drag the phone to move it · Select the monitor to read':'Drag to look around · Select the monitor to read';
+  if(S.enlarged||(view==='seat'&&!camAnim&&facingScreen()))t=view==='seat'&&!S.enlarged?'':t;c.hidden=!t;c.textContent=t}
 function restart(skipConfirm){if(!skipConfirm&&S.phase!=='entry'&&!confirm('Restart the session? Your answers will be cleared.'))return;
   if(S&&S.study)S.study.timers.forEach(clearTimeout);S=freshState();Object.assign(phoneState,{pose:'stand',silenced:false,lit:false,buzz:0,opened:null});placePhone();drawPhoneTexture();drawNoteTexture();if(mug&&mug.userData.home)mug.position.copy(mug.userData.home);setView('room');render();announce('Session restarted.')}
 function goFlat(){THREEOK=false;stage.classList.add('flat');stage.style.height='auto';stage.style.padding='12px';$('loading').hidden=true;cv.hidden=true;document.querySelector('.tools').hidden=true;$('cue').hidden=true;$('scrWrap').classList.remove('off');render()}
