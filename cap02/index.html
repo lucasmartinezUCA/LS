@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Personal Learning Lab: The Focus Room | EDU 500</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/libs/meshopt_decoder.js"></script>
+<style>
+html,body{margin:0;padding:0;background:transparent;font-family:"DM Sans",Arial,sans-serif}
+#plab{--gold:#cfaa65;--label:#206582;--title:#092f49;--text:#33444f;--muted:#5f7280;--line:#d9e6ea;--line2:#cbdce1;--tile:#eef4f5;--primary:#104f6d;--primary-h:#0b3d55;--ok:#23845f;--ok-bg:#ecf8f3;--bad:#b6402f;--bad-bg:#fcf0ee;--warn-bg:#fbf5e6;--hl:#f7e39a;
+  container-type:inline-size;color:var(--text);background:#fff;border:1px solid #d8e6ea;border-top:4px solid var(--gold);border-radius:16px;padding:clamp(18px,3vw,34px) clamp(16px,3vw,38px);margin:8px 0 28px;line-height:1.55;box-sizing:border-box}
+#plab *,#plab *:before,#plab *:after{box-sizing:border-box}
+#plab [hidden]{display:none!important}
+#plab button,#plab select,#plab textarea,#plab input{font:inherit}
+#plab button{cursor:pointer}
+#plab button:focus-visible,#plab select:focus-visible,#plab textarea:focus-visible,#plab input:focus-visible,#plab summary:focus-visible,#plab [tabindex]:focus-visible{outline:3px solid #c19a50;outline-offset:2px}
+#plab button:disabled{opacity:.45;cursor:not-allowed}
+#plab .head{max-width:80ch;margin-bottom:18px}
+#plab .kicker{display:block;font-size:.78rem;font-weight:700;letter-spacing:.09em;color:var(--label);margin-bottom:8px}
+#plab h3{font-family:Georgia,"Times New Roman",serif;font-size:clamp(1.4rem,2.6vw,1.9rem);line-height:1.2;margin:0 0 8px;color:var(--title)}
+#plab .head p{margin:0;font-size:.98rem}
+#plab .note{font-size:.84rem!important;color:var(--muted);margin-top:6px!important}
+/* Stage */
+#plab .stage{position:relative;height:620px;border-radius:14px;border:1px solid var(--line);background:linear-gradient(#eef3f6,#dfe7ec);overflow:hidden}
+#plab .stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+#plab .tools{position:absolute;top:10px;right:10px;z-index:8;display:flex;flex-wrap:wrap;justify-content:flex-end;gap:6px;max-width:calc(100% - 20px)}
+#plab .tools button{font-size:.78rem;font-weight:700;color:var(--title);background:#fff;border:1px solid var(--line2);border-radius:999px;padding:6px 13px}
+#plab .tools button:hover{border-color:var(--primary);background:var(--tile)}
+#plab .tools button[aria-pressed=true]{background:var(--primary);color:#fff;border-color:var(--primary)}
+#plab .cue{position:absolute;left:12px;bottom:12px;z-index:7;font-size:.78rem;color:var(--title);background:#ffffffe6;border:1px solid var(--line2);border-radius:999px;padding:5px 12px;pointer-events:none}
+#plab .loading{position:absolute;inset:0;z-index:9;display:grid;place-items:center;background:#eef3f6}
+#plab .loading div{text-align:center;color:var(--title)}
+#plab .loading progress{width:220px;margin-top:8px}
+/* Overlays glued to 3D surfaces (monitor, phone, notebook) */
+#plab .glue{position:absolute;left:0;top:0;transform-origin:0 0;z-index:4;overflow:hidden}
+#plab .glue.off{display:none}
+#plab .stage.flat .glue{position:relative;transform:none!important;display:block;margin:12px auto}
+#plab .stage.flat .glue.off{display:none}
+#plab .glue.passive{pointer-events:none}
+/* Monitor screen */
+#plab .screen{width:840px;height:457px;background:#f7f9fa;color:var(--text);font-size:15px;line-height:1.45;display:flex;flex-direction:column;border-radius:3px}
+#plab .glue.enlarged{transform:none!important;left:0;top:50px;width:100%;height:calc(100% - 50px);z-index:7;border-radius:0 0 14px 14px}
+#plab .glue.enlarged .screen{width:100%;height:100%}
+#plab .stage.flat .screen{width:100%;max-width:900px;height:auto;min-height:420px}
+#plab .osbar{display:flex;align-items:center;gap:10px;background:#0f2c40;color:#d6e6ef;font-size:12px;padding:4px 10px;flex:none}
+#plab .osbar b{color:#fff;font-weight:700}
+#plab .osbar .sp{flex:1}
+#plab .desk-area{flex:1;position:relative;overflow:auto;padding:14px 18px}
+#plab .taskbar{flex:none;display:flex;gap:6px;align-items:center;background:#e4ecf0;border-top:1px solid var(--line2);padding:4px 8px;font-size:12px;min-height:30px}
+#plab .taskbar button{font-size:12px;border:1px solid var(--line2);background:#fff;border-radius:6px;padding:2px 9px;color:var(--title)}
+#plab .badge{display:inline-block;min-width:17px;padding:0 5px;border-radius:9px;background:#b6402f;color:#fff;font-size:11px;font-weight:700;text-align:center;margin-left:4px}
+#plab .scr-k{font-size:12px;font-weight:700;letter-spacing:.06em;color:var(--label);text-transform:uppercase}
+#plab .scr-h{font-family:Georgia,serif;font-size:21px;line-height:1.25;color:var(--title);margin:3px 0 8px}
+#plab .scr-p{margin:0 0 9px}
+#plab .scr-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+#plab .btn{font-weight:700;font-size:14px;border-radius:8px;padding:8px 15px;border:1px solid var(--line2);background:#fff;color:var(--title)}
+#plab .btn:hover{border-color:var(--primary);background:var(--tile)}
+#plab .btn.pri{background:var(--primary);border-color:var(--primary);color:#fff}
+#plab .btn.pri:hover{background:var(--primary-h)}
+#plab .btn.sm{font-size:12.5px;padding:4px 10px}
+#plab .chk{list-style:none;padding:0;margin:6px 0}
+#plab .chk li{padding:3px 0 3px 26px;position:relative}
+#plab .chk li:before{content:"";position:absolute;left:2px;top:6px;width:14px;height:14px;border:2px solid #9fb3bd;border-radius:4px}
+#plab .chk li.done:before{background:var(--ok);border-color:var(--ok)}
+#plab .chk li.done:after{content:"✓";position:absolute;left:5px;top:1px;color:#fff;font-size:12px;font-weight:700}
+#plab .card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+#plab .grid2{display:grid;grid-template-columns:1.15fr .85fr;gap:12px}
+#plab .fb{border-radius:9px;padding:8px 11px;margin:6px 0;font-size:14px;border:1px solid var(--line)}
+#plab .fb.ok{background:var(--ok-bg);border-color:#b7dfcb}
+#plab .fb.no{background:var(--bad-bg);border-color:#efc9c2}
+#plab .fb.info{background:var(--warn-bg);border-color:#ead6a5}
+#plab table.rep{border-collapse:collapse;width:100%;font-size:13.5px}
+#plab table.rep th,#plab table.rep td{border-bottom:1px solid var(--line);padding:5px 6px;text-align:left;vertical-align:top}
+#plab table.rep thead th{background:var(--tile);color:var(--title);font-size:12.5px}
+/* Lesson material */
+#plab .lesson{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
+#plab .ltext{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+#plab .ltext h4{margin:0 0 6px;font-size:16px;color:var(--title)}
+#plab .span{border-radius:3px;padding:0 1px}
+#plab .hlmode .span,#plab .hlmode .dbox,#plab .hlmode .deco,#plab .hlmode .summary{cursor:pointer;outline:1px dashed #c9a24f66}
+#plab .span.hl,#plab .dbox.hl,#plab .deco.hl,#plab .summary.hl{background:var(--hl)}
+#plab .diagram{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px}
+#plab .drow{display:flex;align-items:stretch;gap:0}
+#plab .dbox{flex:1;min-height:74px;border:2px solid #2f7fb5;border-radius:9px;padding:6px;text-align:center;display:flex;flex-direction:column;justify-content:center;background:#f4f9fd}
+#plab .dbox .num{font-weight:800;font-size:18px;color:#2f7fb5}
+#plab .dbox .nm{font-weight:700;font-size:13px;color:var(--title)}
+#plab .dbox .rl{font-size:12px;color:var(--muted)}
+#plab .dbox.drop{border-style:dashed;background:#eaf6ee}
+#plab .conn{width:64px;display:flex;flex-direction:column;justify-content:center;align-items:center;font-size:11px;color:var(--title);text-align:center}
+#plab .conn .ar{font-size:20px;color:#8a99a3;line-height:1}
+#plab .conn.on .ar{color:#c06a1d}
+#plab .legend{margin-top:8px;font-size:13px}
+#plab .legend .li{display:flex;align-items:center;gap:6px;border:1px solid var(--line2);background:#fff;border-radius:7px;padding:3px 7px;margin:3px 0}
+#plab .legend .li[draggable=true]{cursor:grab}
+#plab .legend .li.sel{border-color:var(--primary);box-shadow:0 0 0 2px #104f6d33}
+#plab .legend .li .x{margin-left:auto}
+#plab .deco{border:1px solid #e2c9a1;background:#fffaf1;border-radius:10px;padding:8px 10px;display:flex;gap:10px;align-items:center;font-size:13px}
+#plab .deco svg{flex:none}
+#plab .summary{border:1px solid var(--line2);background:#f3f7f9;border-radius:10px;padding:8px 10px;font-size:13.5px}
+#plab .summary b,#plab .deco b{display:block;color:var(--title);font-size:12.5px}
+#plab .feedwin{flex:none;align-self:flex-start;width:215px;background:#fff;border:1px solid #b9cbd4;border-radius:9px;box-shadow:0 8px 22px #092f4930;font-size:13px;z-index:2}
+#plab .feedwin .wt{display:flex;align-items:center;gap:6px;background:#e4ecf0;border-radius:9px 9px 0 0;padding:4px 8px;font-weight:700;color:var(--title)}
+#plab .feedwin .wt span{flex:1}
+#plab .feedwin .wt button{border:1px solid var(--line2);background:#fff;border-radius:5px;font-size:11px;padding:0 6px}
+#plab .feedwin .post{border-bottom:1px solid var(--line);padding:6px 9px}
+#plab .feedwin .post small{display:block;color:var(--muted)}
+#plab .narr{margin-top:8px;font-size:13px;background:#f4f1fb;border:1px solid #d8cff3;border-radius:9px;padding:7px 9px}
+#plab .tooln{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px;font-size:13px}
+#plab .tooln select{font-size:12.5px;padding:2px 4px;border:1px solid var(--line2);border-radius:6px}
+#plab .q{background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 11px;margin:0 0 8px}
+#plab .q .qt{font-weight:700;color:var(--title);margin-bottom:4px}
+#plab .q .qk{font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--label)}
+#plab .q label{display:flex;gap:7px;align-items:flex-start;padding:2px 0;font-size:14px}
+#plab .opt3{display:flex;gap:4px;flex-wrap:wrap}
+#plab .opt3 label{border:1px solid var(--line2);border-radius:7px;padding:2px 8px;font-size:12.5px;display:flex;gap:4px;align-items:center}
+#plab .setup-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:5px 0;border-bottom:1px solid var(--line);font-size:13.5px}
+#plab .setup-row b{min-width:150px;color:var(--title)}
+#plab textarea.tx{width:100%;min-height:64px;border:1px solid var(--line2);border-radius:8px;padding:7px;font-size:14px}
+#plab .small{font-size:12.5px;color:var(--muted)}
+/* Phone UI */
+#plab .phone{width:260px;height:540px;background:#101a22;color:#e9f1f5;font-size:14px;display:flex;flex-direction:column;padding:16px 12px;gap:8px;border-radius:10px}
+#plab .phone .clock{font-size:46px;font-weight:300;text-align:center;line-height:1;margin-top:10px}
+#plab .phone .date{text-align:center;font-size:13px;color:#a8bcc8;margin-bottom:8px}
+#plab .phone .ntf{background:#ffffff1f;border-radius:12px;padding:8px 10px;font-size:13px}
+#plab .phone .ntf small{display:block;color:#a8bcc8}
+#plab .phone .ntf button,#plab .phone .pbtn{border:0;border-radius:9px;background:#ffffff2e;color:#fff;padding:6px 10px;font-weight:700;font-size:13px;margin-top:5px}
+#plab .phone .pbtn.on{background:#cfaa65;color:#1b1b1b}
+#plab .phone .sp{flex:1}
+/* Notebook UI */
+#plab .notebook{width:420px;height:560px;background:#fffdf6;background-image:repeating-linear-gradient(#fffdf6 0 27px,#cfe0ea 27px 28px);color:#1f3442;padding:22px 22px 16px 46px;font-size:15px;display:flex;flex-direction:column;gap:8px;position:relative}
+#plab .notebook:before{content:"";position:absolute;left:34px;top:0;bottom:0;width:1px;background:#e5a3a3}
+#plab .notebook h4{margin:0;font-family:Georgia,serif;font-size:19px;color:var(--title)}
+#plab .notebook textarea{flex:1;border:1px dashed #b9cbd4;background:#ffffffb0;border-radius:6px;padding:6px;font-size:15px;line-height:28px;resize:none}
+/* Alternative + footer */
+#plab .alt{margin-top:12px;font-size:.88rem}
+#plab .alt summary{cursor:pointer;font-weight:700;color:var(--label)}
+#plab .alt .row{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+#plab .alt .row button{font-size:.82rem;font-weight:700;border-radius:8px;padding:6px 12px;border:1px solid var(--line2);background:#fff;color:var(--title)}
+#plab .foot{margin-top:12px;font-size:.76rem;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 16px}
+#plab .foot a{color:var(--label)}
+#plab .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+@container (max-width:760px){
+  #plab .tools{gap:4px}
+  #plab .tools button{font-size:.72rem;padding:5px 9px}
+  #plab #enlargeBtn,#plab #motionBtn{display:none}
+  #plab .stage{height:clamp(480px,130cqw,720px)}
+  #plab .glue.enlarged .lesson,#plab .glue.enlarged .grid2,#plab .stage.flat .lesson,#plab .stage.flat .grid2{grid-template-columns:1fr}
+  #plab .glue.enlarged .withfeed,#plab .stage.flat .withfeed{flex-direction:column}
+  #plab .glue.enlarged .feedwin,#plab .stage.flat .feedwin{width:auto}
+}
+</style>
+</head>
+<body>
+<section id="plab">
+<div class="head">
+  <span class="kicker">Interactive 3D Lab · Chapter 2</span>
+  <h3>Personal Learning Lab: The Focus Room</h3>
+  <p>Episode I · The Attention Experiment. Study in a virtual room, change the conditions of the task and compare what happens.</p>
+  <p class="note">About 12–18 minutes. No time limit. Your answers stay in this browser unless you export them.</p>
+</div>
+<div class="stage" id="stage">
+  <canvas id="world" aria-label="Three-dimensional study room with a desk, a computer monitor, a phone, a notebook and a storage box. All tasks are on the monitor; the same actions are listed under Text and keyboard controls."></canvas>
+  <div class="glue off" id="scrWrap"><div class="screen" id="screen" role="region" aria-label="Computer screen"></div></div>
+  <div class="glue off" id="phoneWrap"><div class="phone" id="phoneUI" role="region" aria-label="Phone screen"></div></div>
+  <div class="glue off" id="noteWrap"><div class="notebook" id="noteUI" role="region" aria-label="Notebook page"></div></div>
+  <div class="tools" role="toolbar" aria-label="View controls">
+    <button type="button" data-view="room">Room</button>
+    <button type="button" data-view="desk">Desk</button>
+    <button type="button" data-view="screen">Screen</button>
+    <button type="button" id="enlargeBtn" aria-pressed="false">Enlarge screen</button>
+    <button type="button" id="motionBtn" aria-pressed="false">Reduce motion</button>
+    <button type="button" id="restartBtn">Restart</button>
+    <button type="button" id="fsBtn">Full screen</button>
+  </div>
+  <div class="cue" id="cue" hidden></div>
+  <div class="loading" id="loading"><div><b>Preparing your study room…</b><br><progress id="prog" max="100" value="0"></progress><br><small id="loadMsg">Loading the 3D model</small></div></div>
+</div>
+<details class="alt" id="alt"><summary>Text and keyboard controls</summary>
+  <p>Every task appears on the computer screen. These buttons give the same access to the room and its objects without using the 3D view.</p>
+  <div class="row"><b style="align-self:center">Views:</b><button type="button" data-view="room">Room</button><button type="button" data-view="desk">Desk</button><button type="button" data-view="screen">Screen</button><button type="button" id="altEnlarge">Show the screen enlarged</button></div>
+  <div class="row"><b style="align-self:center">Phone:</b><button type="button" id="altPhoneOpen">Open the phone</button><button type="button" id="altPhoneMove">Put the phone in the storage box</button><button type="button" id="altPhoneStand">Return the phone to its stand</button></div>
+  <div class="row"><b style="align-self:center">Notebook:</b><button type="button" id="altNote">Open the notebook</button></div>
+  <div class="row"><b style="align-self:center">Tutorial:</b><button type="button" id="altMug">Move the mug</button><b style="align-self:center;margin-left:10px">Motion:</b><button type="button" id="altMotion">Reduce motion</button></div>
+  <p id="altStatus" class="small"></p>
+</details>
+<div class="foot"><span>Formative learning activity · No time limit · No automatic submission to the LMS</span><span>Room model: <a href="https://sketchfab.com/3d-models/workroomstudyroom-657ee9bf11734f65a25b1f31a44ef71d" target="_blank" rel="noopener">workroom/study/room</a> by <a href="https://sketchfab.com/mrdt.club" target="_blank" rel="noopener">MrdT</a>, <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>. Changes: compressed textures and geometry, cutaway view, original phone replaced, phone, stand, notebook and storage box added.</span></div>
+<div id="live" class="sr" aria-live="polite" aria-atomic="true"></div>
+</section>
+<script>
+'use strict';
+const $=id=>document.getElementById(id),esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function announce(t){$('live').textContent=t}
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+
+/* ================= Content ================= */
+const LESSONS={
+ A:{title:'Automatic desk lamp',parts:[['Light sensor','Measures the available daylight'],['Controller','Compares the reading with a preset level and switches the lamp'],['Desk lamp','Turns on or off']],
+   spans:['A light sensor measures the available daylight.','When daylight falls below a preset level,','a controller switches the desk lamp on.','When the daylight returns above that level,','the controller switches the lamp off.','The lamp changes state according to the signal,','not according to the time of day.'],key:[1,2,5],
+   deco:['Design spotlight','Spring-balanced desk lamps became popular in the 1930s, when designers wanted lamps that could be positioned with one hand.'],
+   narr:'Follow the diagram from left to right. The sensor\u2019s reading goes to the controller, and the controller decides whether the lamp should be on or off.',
+   ntf:[['Maya','Are you still coming tonight?'],['Study group','Ben shared a photo']],
+   feed:[['Campus news','Library hours are extended this week.'],['Poll','What is your favorite study snack?'],['Clubs','Photography club meets on Thursday.']],
+   qs:[{t:'recognition',q:'Which component measures daylight?',o:['Light sensor','Controller','Desk lamp','A timer'],a:0,why:'The light sensor measures the available daylight; the controller only interprets that reading.'},
+       {t:'understanding',q:'Why does the lamp turn on?',o:['Daylight falls below the preset level, and the controller responds to the sensor signal','It is evening, and the controller follows the clock','The lamp detects darkness by itself and switches on','The sensor switches the lamp on directly, without the controller'],a:0,why:'The relation is sensor signal → controller decision → lamp action. Time of day is not part of the rule.'},
+       {t:'application',q:'The sensor keeps reporting low daylight even though the room is bright. What will the controller do?',o:['Keep the lamp on','Turn the lamp off because the room is bright','Switch the lamp on and off repeatedly','Wait for a fixed time before deciding'],a:0,why:'Under the described rule, the controller acts on the signal it receives, so it keeps the lamp on.'}]},
+ B:{title:'Automatic ventilation',parts:[['Air-quality sensor','Measures carbon dioxide in the room'],['Controller','Compares the reading with a preset limit and starts or stops the fan'],['Ventilation fan','Brings in outdoor air']],
+   spans:['An air-quality sensor measures carbon dioxide in the room.','When the measured level rises above a preset limit,','a controller activates an outdoor-air ventilation fan.','When the level falls below the limit,','the controller stops the fan.','The fan responds to the sensor signal,','not directly to the number of people in the room.'],key:[1,2,5],
+   deco:['Did you know?','Many offices now choose ceiling fans with wooden blades because they match warm interior colors.'],
+   narr:'Follow the diagram from left to right. The sensor\u2019s reading goes to the controller, and the controller decides whether the fan should run.',
+   ntf:[['Leo','Did you see the game last night?'],['Shop app','Your order has been shipped']],
+   feed:[['Campus news','New bike racks were installed near the gym.'],['Events','Open-mic night is on Friday.'],['Poll','Which café has the best coffee?']],
+   qs:[{t:'recognition',q:'Which component starts or stops the fan?',o:['Controller','Air-quality sensor','Ventilation fan','A people counter'],a:0,why:'The controller starts and stops the fan; the sensor only measures carbon dioxide.'},
+       {t:'understanding',q:'Why does the fan start?',o:['The measured level rises above the limit, and the controller responds to the sensor signal','More people enter, and the fan counts them','The fan follows a fixed daily schedule','The fan measures carbon dioxide and turns itself on'],a:0,why:'The fan starts because the controller responds to the sensor signal crossing the limit, not to people directly.'},
+       {t:'application',q:'The sensor falsely reports a low level while the room is crowded. What will the controller do?',o:['Keep the fan off','Turn the fan on because the room is crowded','Run the fan at maximum speed','Alternate between on and off'],a:0,why:'The controller follows the signal it receives; with a low reading, the stated rule keeps the fan off.'}]},
+ C:{title:'Automatic plant irrigation',parts:[['Soil sensor','Measures moisture around the plant'],['Controller','Compares the reading with a preset level and starts or stops the pump'],['Water pump','Supplies water to the plant']],
+   spans:['A soil sensor measures moisture around a plant.','When moisture falls below a preset level,','a controller activates a small water pump.','When the measured moisture rises above that level,','the controller stops the pump.','Watering depends on the sensor signal,','not on a fixed daily schedule.'],key:[1,2,5],
+   deco:['Garden corner','Terracotta pots were used in Mediterranean gardens for centuries and are still a popular choice today.'],
+   narr:'Follow the diagram from left to right. The sensor\u2019s reading goes to the controller, and the controller decides whether the pump should run.',
+   ntf:[['Ana','Can you send me the notes later?'],['Music app','A new playlist was made for you']],
+   feed:[['Campus news','The cafeteria has a new vegetarian menu.'],['Sports','Swimming pool reopens on Monday.'],['Poll','Morning or evening classes?']],
+   qs:[{t:'recognition',q:'Which component supplies water?',o:['Water pump','Soil sensor','Controller','A garden timer'],a:0,why:'The water pump supplies the water; it acts on the controller\u2019s decision.'},
+       {t:'understanding',q:'Why does the pump stop?',o:['The measured moisture rises above the preset level, and the controller responds','The pump has run for a fixed number of minutes','The plant absorbs enough water and closes the pump','The pump measures the moisture and stops itself'],a:0,why:'The controller stops the pump when the sensor reading crosses the preset level.'},
+       {t:'application',q:'The sensor reports wet soil while the soil is actually dry. What will the controller do?',o:['Keep the pump off','Turn the pump on because the soil is dry','Water on its usual daily schedule','Switch the pump on and off'],a:0,why:'The controller acts on the signal, so a wet reading keeps the pump off under the stated rule.'}]}
+};
+const SUPPORTS=[['labels','Labels integrated into the diagram'],['signal','Signals that mark the key relation'],['narration','Brief narration that explains the diagram'],['partial','A partly completed diagram to finish'],['concise','A concise diagram without extra explanation'],['problem','An application problem to solve']];
+const LEVELS=[['keep','Keep'],['reduce','Reduce'],['demand','On demand']];
+const TRANSFER={
+  protect:[['caption','Place the caption next to the diagram',1],['banner','Remove the animated decorative banner',1],['audio','Replace the word-for-word audio with narration that explains the diagram, or turn it off (keeping a transcript)',1],['diagram','Remove the diagram to shorten the module',0],['images','Add more images to make the page attractive',0]],
+  direct:[['mark','Mark the relation between the sensor, the controller and the heater',1],['arrow','Add an arrow labeled “sends the temperature reading to”',1],['explain','Ask learners to explain the relation in their own words',1],['all','Highlight every sentence on the page',0],['fact','Add a fun fact about the history of thermostats',0]]};
+
+/* ================= State ================= */
+let S;
+function freshState(){return{
+  phase:'entry',step:'welcome',order:shuffle(['A','B','C']),tut:{monitor:false,moved:false,returned:false},
+  cfg:baseCfg(),pendingCfg:null,
+  phone:{pose:'stand',silenced:false,x:0,z:0},
+  sessions:[newSession(),newSession(),newSession()],
+  direct:{hl:new Set(),arrows:[],note:'',noteOpened:false},
+  profile:{a:{},b:{},why:''},transfer:{protect:'',direct:'',adaptA:'',adaptB:'',why:'',self:{}},commitment:'',
+  enlarged:false,study:{feedOpen:true,feedMin:false,feedCount:0,ntf:[],timers:[]},legendSel:null}}
+function baseCfg(){return{feed:'open',legend:{1:'separate',2:'separate',3:'separate'},deco:true,summary:true,narration:'off'}}
+function newSession(){return{lesson:null,cfg:null,phone:null,ntfArrived:0,ntfShown:0,ntfOpened:0,feedOpened:0,first:[],second:[],self:'',changes:[]}}
+const cur=()=>S.sessions[sIdx()];
+function sIdx(){return {s1:0,s2:1,s3:2}[S.phase]??0}
+const lessonFor=i=>LESSONS[S.order[i]];
+
+/* ================= Screen rendering ================= */
+const scr=$('screen');
+function osbar(title){let s=S.phase;let lbl={entry:'Welcome',s1:'Session 1 · Experience the problem',s2:'Session 2 · Protect your attention',s3:'Session 3 · Direct your attention',profile:'Build your learning profile',transfer:'Integrative check',report:'Session report'}[s];return `<div class="osbar"><b>Focus Room</b><span>${esc(lbl)}</span><span class="sp"></span><span>${esc(title||'')}</span></div>`}
+function taskbar(){let st=S.study,show=S.step==='study'||S.step==='setup';if(!show||S.cfg.feed==='closed')return `<div class="taskbar"><span class="small">Study computer</span></div>`;
+  if(S.phase==='s1')return `<div class="taskbar"><span class="small">Open apps: Campus feed</span></div>`;
+  return `<div class="taskbar"><span class="small">Open apps:</span><button data-act="feedToggle">Campus feed${st.feedMin&&st.feedCount?`<span class="badge">${st.feedCount}</span>`:''}</button></div>`}
+function render(){if(!S)return;let h='';
+  switch(S.phase){
+   case 'entry':h=entryScreen();break;
+   case 's1':case 's2':case 's3':h=sessionScreen();break;
+   case 'profile':h=profileScreen();break;
+   case 'transfer':h=transferScreen();break;
+   case 'report':h=reportScreen();break}
+  let da=$('deskArea'),top=da?da.scrollTop:0,keep=S._lastKey===S.phase+S.step,fid=document.activeElement&&scr.contains(document.activeElement)?document.activeElement.id:null;S._lastKey=S.phase+S.step;
+  scr.innerHTML=osbar()+`<div class="desk-area" id="deskArea">${h}</div>`+taskbar();if(keep)$('deskArea').scrollTop=top;if(fid&&$(fid))$(fid).focus({preventScroll:true});
+  bindScreen();renderPhone();renderNote();updateAlt();drawMonitorTexture();updateCue()}
+
+function entryScreen(){let t=S.tut;
+  return `<div class="grid2"><div><div class="scr-k">Your mission</div><div class="scr-h">Explore how your study environment and the way information is presented can shape what you learn.</div>
+   <p class="scr-p">Your goal is to explain and apply the ideas, not simply to finish reading. You will study three short texts on this computer, change the conditions between sessions and compare what happens.</p>
+   <div class="scr-row"><button class="btn pri" data-act="start">Start Session 1</button></div></div>
+   <div class="card"><b>Try the controls</b><ul class="chk">
+   <li class="${t.monitor?'done':''}">Select the monitor to read at the screen.</li>
+   <li class="${t.moved?'done':''}">Choose <b>Desk</b> at the top right and drag the mug a little.</li>
+   <li class="${t.returned?'done':''}">Choose <b>Screen</b> to come back to this page.</li></ul>
+   <p class="small">Room shows the whole room. Desk shows the objects you can move. Screen is your reading position. Enlarge screen shows this page in full size. The tutorial is optional.</p></div></div>`}
+
+function lessonHTML(L,cfg,opts={}){let st=S.study,hl=S.direct.hl,dir=opts.direct;
+  let part=i=>{let state=cfg.legend[i+1],p=L.parts[i],box=`dbox${dir&&hl.has('b'+i)?' hl':''}`;
+    return `<div class="${box}" data-box="${i}" data-hk="b${i}" ${opts.setup?`data-drop="${i+1}"`:''}><div class="num">${i+1}</div>${state==='integrated'?`<div class="nm">${esc(p[0])}</div><div class="rl">${esc(p[1])}</div>`:''}</div>`};
+  let conn=i=>{let a=S.direct.arrows.find(x=>(x.f===i&&x.t===i+1)||(x.f===i+1&&x.t===i));if(!dir||!a)return `<div class="conn"><span class="ar"> </span></div>`;
+    return `<div class="conn on"><span class="ar">${a.f===i?'→':'←'}</span>${esc(a.rel)}</div>`};
+  let legendItems=[1,2,3].filter(n=>cfg.legend[n]==='separate');
+  let legend=legendItems.length?`<div class="legend" aria-label="Diagram legend"><b class="small">Legend</b>${legendItems.map(n=>`<div class="li${S.legendSel===n?' sel':''}" ${opts.setup?`draggable="true" data-leg="${n}" tabindex="0" role="button" aria-pressed="${S.legendSel===n}"`:''}><b>${n}</b> ${esc(L.parts[n-1][0])}: ${esc(L.parts[n-1][1])}${opts.setup?`<button class="btn sm x" data-act="legRemove" data-n="${n}" aria-label="Remove label ${n}">Remove</button>`:''}</div>`).join('')}</div>`:'';
+  let removed=[1,2,3].filter(n=>cfg.legend[n]==='removed');
+  let far=opts.setup?'':' style="margin-top:46px"';
+  let text=`<div class="ltext${dir&&S.direct.hlMode?' hlmode':''}"><h4>${esc(L.title)}</h4>${L.spans.map((s,i)=>`<span class="span${dir&&hl.has('t'+i)?' hl':''}" data-hk="t${i}">${esc(s)}</span>`).join(' ')}</div>`;
+  let deco=cfg.deco?`<div class="deco${dir&&hl.has('deco')?' hl':''}" data-hk="deco">${decoSVG()}<div><b>${esc(L.deco[0])}</b>${esc(L.deco[1])}</div>${opts.setup?`<button class="btn sm" data-act="decoRemove">Remove</button>`:''}</div>`:'';
+  let summary=cfg.summary?`<div class="summary${dir&&hl.has('sum')?' hl':''}" data-hk="sum"><b>Summary</b>${esc(L.spans.join(' '))}${opts.setup?`<div><button class="btn sm" data-act="sumRemove">Remove</button></div>`:''}</div>`:'';
+  let narr=cfg.narration==='off'?'':`<div class="narr"><b>Narration</b> <button class="btn sm" data-act="playNarr">Play</button> <span class="small">Transcript:</span> ${esc(cfg.narration==='repeat'?L.spans.join(' '):L.narr)}</div>`;
+  let feed='',showFeed=opts.setup?cfg.feed==='open':(cfg.feed!=='closed'&&st.feedOpen&&!st.feedMin),ctl=opts.setup||S.phase!=='s1';if(showFeed){let posts=opts.setup?L.feed:L.feed.slice(0,Math.max(1,st.feedShown||1));feed=`<div class="feedwin" role="complementary" aria-label="Campus feed window"><div class="wt"><span>Campus feed</span>${ctl?`<button data-act="feedMin">Minimize</button><button data-act="feedClose">Close</button>`:''}</div>${posts.map(p=>`<div class="post"><small>${esc(p[0])}</small>${esc(p[1])}</div>`).join('')}</div>`}
+  let diagram=`<div class="diagram${dir&&S.direct.hlMode?' hlmode':''}"><div class="drow">${part(0)}${conn(0)}${part(1)}${conn(1)}${part(2)}</div>${dir?S.direct.arrows.filter(a=>Math.abs(a.f-a.t)===2).map(a=>`<div class="small">Arrow: ${a.f+1} → ${a.t+1}: ${esc(a.rel)}</div>`).join(''):''}${narr}</div>`;
+  let left=`${text}${summary?`<div style="margin-top:10px">${summary}</div>`:''}`;
+  let right=`${deco}<div style="margin-top:10px">${diagram}</div>${removed.length&&!opts.setup?'':''}`;
+  return `<div class="withfeed" style="display:flex;gap:10px;align-items:flex-start"><div class="lesson" style="flex:1;min-width:0"><div>${left}${legend?`<div${far}>${legend}</div>`:''}</div><div>${right}</div></div>${feed}</div>`}
+function decoSVG(){return `<svg width="62" height="54" viewBox="0 0 62 54" aria-hidden="true"><rect x="0" y="0" width="62" height="54" rx="8" fill="#f3e3c8"/><circle cx="46" cy="14" r="8" fill="#e9b65c"/><path d="M6 46 L22 24 L32 36 L40 28 L56 46Z" fill="#c98e4a"/></svg>`}
+
+function sessionScreen(){let i=sIdx(),L=lessonFor(i),step=S.step,ses=cur();
+  let num=i+1,missions=['Study the material on this screen. When you finish, the material will be hidden and you will answer three questions.','Prepare the workspace for the next learning task. Reduce demands that do not help you meet the learning goal.','Identify and make the essential relationships easier to notice.'];
+  if(step==='mission'){let extra=i===1?`<p class="scr-p">You can change the room and this screen. Use <b>Desk</b> to move objects, select the phone to change its settings, and use the controls on the screen to change the material. Nothing is changed for you. When the setup is ready, confirm it.</p>`:
+     i===2?`<p class="scr-p">Your setup from Session 2 is still in place, and you can review it. While you study, you can mark text and diagram parts, add an arrow that explains a relation, and write in the notebook on the desk.</p>`:
+     `<p class="scr-p">Study as you normally would. Your phone is on its stand next to the monitor.</p>`;
+    return `<div class="scr-k">Session ${num} of 3</div><div class="scr-h">${esc(missions[i])}</div>${extra}<div class="scr-row">${i===1?`<button class="btn pri" data-act="toSetup">Set up the workspace</button>`:i===2?`<button class="btn" data-act="toSetup">Review setup</button><button class="btn pri" data-act="beginStudy">Start studying</button>`:`<button class="btn pri" data-act="beginStudy">Start studying</button>`}</div>`}
+  if(step==='setup'){let c=S.pendingCfg,prev=lessonFor(Math.max(0,i-1));
+    let ph=phoneStatusText();
+    return `<div class="scr-k">Session ${num} · Workspace setup</div><p class="scr-p small" style="margin:2px 0 8px">The preview uses the layout of the previous material. Your choices will apply to the next material. Drag a legend label onto its numbered part (or select the label, then the part).</p>
+     <div class="setup-row"><b>Phone</b><span>${esc(ph)}</span><button class="btn sm" data-act="goDesk">Go to Desk</button></div>
+     <div class="setup-row"><b>Campus feed window</b>${['open','minimized','closed'].map(v=>`<label><input type="radio" name="feed" value="${v}" ${c.feed===v?'checked':''} data-act="cfgFeed"> ${v==='open'?'Keep open':v==='minimized'?'Minimize':'Close'}</label>`).join(' ')}</div>
+     <div class="setup-row"><b>Narration</b>${[['off','Off'],['repeat','Read all on-screen text aloud'],['explain','Explain the diagram']].map(v=>`<label><input type="radio" name="narr" value="${v[0]}" ${c.narration===v[0]?'checked':''} data-act="cfgNarr"> ${v[1]}</label>`).join(' ')}</div>
+     <div class="setup-row"><b>Restore removed items</b><button class="btn sm" data-act="restoreAll">Restore all</button><span class="small">${changedSummary(c)}</span></div>
+     <div style="position:relative;margin-top:10px">${lessonHTML(prev,c,{setup:true})}</div>
+     ${S.consequence?`<div class="fb info" role="status">${S.consequence} <button class="btn sm" data-act="restoreAll">Restore the labels</button> <button class="btn sm pri" data-act="confirmAnyway">Keep this setup</button></div>`:''}
+     <div class="scr-row"><button class="btn pri" data-act="confirmSetup">Confirm setup</button>${i===2?`<button class="btn" data-act="backMission">Back</button>`:''}</div>`}
+  if(step==='study'){let tools='';
+    if(i===2){let sel=(n,v)=>`<select data-arr="${n}" aria-label="${n==='f'?'Arrow from part':n==='t'?'Arrow to part':'Relation'}">${(n==='rel'?['sends a signal to','switches on or off','is decorated by','depends on the time of day for']:['1','2','3']).map((o,k)=>`<option value="${n==='rel'?o:k+1}" ${n==='t'&&k===1?'selected':''}>${o}</option>`).join('')}</select>`;
+      tools=`<div class="tooln" role="toolbar" aria-label="Directing tools"><button class="btn sm" data-act="hlMode" aria-pressed="${!!S.direct.hlMode}">${S.direct.hlMode?'Marking: on':'Mark text and parts'}</button>
+        <span>Arrow from ${sel('f')} to ${sel('t')} : ${sel('rel')}</span><button class="btn sm" data-act="addArrow">Add arrow</button>${S.direct.arrows.length?`<button class="btn sm" data-act="clearArrows">Clear arrows</button>`:''}<button class="btn sm" data-act="openNote">Notebook</button></div>`}
+    return `${tools}<div style="position:relative">${lessonHTML(L,S.cfg,{direct:i===2})}</div><div class="scr-row"><button class="btn pri" data-act="finishStudy">Finish studying</button>${i>0?`<span class="small">Phone: ${esc(phoneStatusText())}</span>`:''}</div>`}
+  if(step==='quiz'){return `<div class="scr-k">Session ${num} · Questions</div><p class="scr-p small">The material is hidden. Answer from what you studied.</p>${L.qs.map((q,k)=>quizItem(q,k,i)).join('')}
+     <div class="q"><div class="qt">Before you check: how well do you think you understood the material?</div><div class="opt3">${['Not well','Partly','Well'].map(v=>`<label><input type="radio" name="self" value="${v}" ${ses.self===v?'checked':''} data-act="self"> ${v}</label>`).join('')}</div></div>
+     <div class="scr-row"><button class="btn pri" data-act="checkQuiz">Check answers</button></div>`}
+  if(step==='feedback')return feedbackScreen(i,L);
+  return ''}
+function quizItem(q,k,i,locked){let ses=S.sessions[i],ans=ses.first[k];let ord=q.order||(q.order=shuffle(q.o.map((_,j)=>j)));
+  return `<div class="q"><div class="qk">${q.t}</div><div class="qt">${k+1}. ${esc(q.q)}</div>${ord.map(j=>`<label><input type="radio" name="q${k}" value="${j}" ${ans===j?'checked':''} ${locked?'disabled':''} data-act="ans" data-k="${k}"> ${esc(q.o[j])}</label>`).join('')}</div>`}
+function feedbackScreen(i,L){let ses=S.sessions[i],h=`<div class="scr-k">Session ${i+1} · Feedback</div>`;
+  h+=L.qs.map((q,k)=>{let f=ses.first[k],s=ses.second[k],ok=f===q.a,ok2=s===q.a;let ord=q.order;
+    return `<div class="fb ${ok||ok2?'ok':'no'}"><b>${k+1}. ${q.t}:</b> ${ok?'Correct on the first attempt.':s!=null?(ok2?'Correct after revision.':'Still not correct.'):'Not correct yet.'} ${(ok||s!=null)?esc(q.why):''}
+     ${!ok&&s==null?`<div style="margin-top:4px">${ord.map(j=>`<label style="display:inline-flex;gap:4px;margin-right:10px;font-size:13px"><input type="radio" name="r${k}" value="${j}" data-act="rev" data-k="${k}"> ${esc(q.o[j])}</label>`).join('')}</div>`:''}</div>`}).join('');
+  if(i===0)h+=`<div class="fb info"><b>What happened in this session.</b> The material had a legend placed away from the diagram, a decorative panel, a summary that repeated the text, and a feed window open on the computer. ${ses.ntfShown} phone notification${ses.ntfShown===1?'':'s'} lit up the phone; you opened ${ses.ntfOpened}. This is a description of this session, not a diagnosis of your attention.</div>`;
+  if(i===1)h+=setupFeedback(ses);
+  if(i===2)h+=setupFeedback(ses,true)+directFeedback(L);
+  let pending=L.qs.some((q,k)=>ses.first[k]!==q.a&&ses.second[k]==null);
+  h+=`<div class="scr-row">${pending?`<span class="small">You can revise the items above, or continue.</span>`:''}<button class="btn pri" data-act="nextPhase">${i<2?`Continue to Session ${i+2}`:'Continue: build your learning profile'}</button></div>`;
+  return h}
+const MECH={
+ phone:{stored:'You put the phone in the storage box. This reduces chances for involuntary capture and for switching between tasks. Keeping a phone nearby does not prove distraction by itself.',
+        silenced:'You silenced the phone. Fewer alerts means fewer chances for stimulus-driven capture and task switching. Keeping a phone nearby does not prove distraction by itself.',
+        away:'You moved the phone away from your reading position. Its alerts are less likely to capture attention, although an alert you can still notice may interrupt you.',
+        kept:'The phone stayed active near the screen. Alerts can capture attention involuntarily and invite switching. Whether this matters depends on what you do with them.'},
+ feed:{closed:'You closed the feed window. This reduces competition for resources and the cost of moving focus between tasks.',minimized:'You minimized the feed window. It no longer competes visually, but its badge still offers a reason to switch.',open:'The feed window stayed open. A concurrent task competes for limited resources; how much depends on the nature of the tasks.'},
+ legend:{integrated:'You placed labels next to their parts. Information that must be used together can now be read together, which reduces searching and mental integration (split attention).',separate:'Some labels stayed apart from the diagram. Learners have to search for them and hold them in mind while looking at the parts (split attention).',removed:'You removed at least one label. This also removes necessary information: the diagram no longer tells which part is which.'},
+ deco:{removed:'You removed the decorative panel. This reduces visual competition while the essential content stays.',kept:'The decorative panel stayed. Interesting but irrelevant details can attract attention away from the essential relation.'},
+ summary:{removed:'You removed the summary that repeated the text. Reconciling two identical versions can add effort without new information. Accessibility captions are a different case and are not an error.',kept:'The repeated summary stayed. Processing the same information twice may add effort without adding meaning.'},
+ narration:{explain:'You chose narration that explains the diagram. Complementary spoken information can spread demands across channels.',repeat:'You chose narration that repeats all on-screen text. Repeating the text does not ensure a modality benefit and may add redundancy.',off:'Narration stayed off. That is a valid choice; complementary narration is one option, not a requirement.'}};
+function cfgKeys(c,ph){let lg=Object.values(c.legend);return{phone:ph.pose==='box'?'stored':ph.silenced?'silenced':ph.away?'away':'kept',feed:c.feed,legend:lg.includes('removed')?'removed':lg.every(v=>v==='integrated')?'integrated':'separate',deco:c.deco?'kept':'removed',summary:c.summary?'kept':'removed',narration:c.narration}}
+function setupFeedback(ses,brief){let k=cfgKeys(ses.cfg,ses.phone);
+  return `<div class="fb info"><b>${brief?'Setup used in this session':'Your setup and what it may change'}</b>${brief?` <span class="small">(same feedback as Session 2 for anything you kept)</span>`:''}<ul style="margin:4px 0 0;padding-left:18px">${Object.entries(k).map(([d,v])=>`<li>${esc(MECH[d][v])}</li>`).join('')}</ul><div class="small" style="margin-top:4px">During studying: ${ses.ntfShown} notification(s) lit the phone, ${ses.ntfOpened} opened; the feed window was reopened ${ses.feedOpened} time(s).</div></div>`}
+function directFeedback(L){let d=S.direct,total=L.spans.length+3+(S.cfg.deco?1:0)+(S.cfg.summary?1:0),n=d.hl.size,out=[];
+  if(!n)out.push('You did not mark anything. Marking is useful when it points to what matters; it is not required.');
+  else if(n/total>=.7)out.push(`You marked ${n} of ${total} items. When almost everything is marked, the marks no longer set a priority.`);
+  else{let key=L.key.filter(k=>d.hl.has('t'+k)).length;out.push(key>=2?'Your marks point to the condition and the controller\u2019s response, which is the essential relation of this material.':'Your marks were selective. Check whether they point to the relation between the sensor reading, the controller and the action, rather than to isolated words.')}
+  if(d.hl.has('deco'))out.push('You marked the decorative panel. Marking it gives it priority although it does not serve the task.');
+  if(d.arrows.length){d.arrows.forEach(a=>{let ok=(a.f===0&&a.t===1&&a.rel==='sends a signal to')||(a.f===1&&a.t===2&&a.rel==='switches on or off');out.push(ok?`Arrow ${a.f+1} → ${a.t+1} (“${a.rel}”) states a relation the material describes.`:`Arrow ${a.f+1} → ${a.t+1} (“${a.rel}”) does not match the relation in the material. The sensor sends its reading to the controller, and the controller switches the device.`)})}
+  else out.push('You did not add an arrow. An explanatory arrow can make a relation explicit, but other supports can do the same.');
+  let note=d.note.trim();
+  if(!note)out.push('The notebook stayed empty. Writing is one option for organizing the relation, not a requirement.');
+  else{let v=verbatim(note,L.spans.join(' ')),rel=/(sensor|signal|reading|measur)/i.test(note)&&/(controller|decid|switch|start|stop|activat)/i.test(note);
+    out.push(v?'Your note copies the wording of the material. A copy can serve as a record, but it does not necessarily show that you reorganized the idea.':rel?'Your note restates the relation in your own words. Rephrasing can support selection and organization when the demand fits what you already know.':'Your note is in your own words. Check whether it states how the reading, the controller and the action connect.')}
+  return `<div class="fb info"><b>How you directed your attention</b><ul style="margin:4px 0 0;padding-left:18px">${out.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`}
+function verbatim(a,b){let w=s=>s.toLowerCase().replace(/[^a-z\s]/g,'').split(/\s+/).filter(Boolean),A=w(a),B=w(b).join(' ');if(A.length<5)return false;let hit=0,tot=0;for(let i=0;i+3<=A.length;i++){tot++;if(B.includes(A.slice(i,i+3).join(' ')))hit++}return tot&&hit/tot>=.6}
+function changedSummary(c){let b=baseCfg(),n=0;if(c.feed!==b.feed)n++;if(!c.deco)n++;if(!c.summary)n++;if(c.narration!=='off')n++;n+=Object.values(c.legend).filter(v=>v!=='separate').length;return n?`${n} change${n>1?'s':''} so far`:'No changes yet'}
+
+function profileScreen(){let p=S.profile;
+  let col=(who)=>SUPPORTS.map(([id,lab])=>`<div style="padding:3px 0;border-bottom:1px solid var(--line);font-size:13.5px"><div>${esc(lab)}</div>${LEVELS.map(([v,l])=>`<label class="small"><input type="radio" name="${who}-${id}" value="${v}" ${p[who][id]===v?'checked':''} data-act="prof" data-who="${who}" data-id="${id}"> ${l}</label>`).join(' ')}</div>`).join('');
+  let fb='';if(S.profileDone)fb=profileFeedback();
+  return `<div class="scr-k">Build your learning profile</div><div class="scr-h">Adapt the supports to two learners.</div>
+   <div class="grid2" style="grid-template-columns:1fr 1fr"><div class="card"><b>Jordan</b><div class="small">Knows little about automatic systems.</div>${col('a')}</div><div class="card"><b>Sam</b><div class="small">Already understands the sensor–controller–action relation.</div>${col('b')}</div></div>
+   <div class="q" style="margin-top:8px"><div class="qt">Explain at least one difference between your choices for Jordan and Sam.</div><textarea class="tx" data-field="profile.why" aria-label="Your justification">${esc(p.why)}</textarea></div>
+   ${fb}<div class="scr-row">${S.profileDone?`<button class="btn pri" data-act="toTransfer">Continue: integrative check</button>`:`<button class="btn pri" data-act="profileCheck">Review my choices</button>`}</div>`}
+function profileFeedback(){let p=S.profile,diff=SUPPORTS.filter(([id])=>p.a[id]!==p.b[id]).length,unset=SUPPORTS.filter(([id])=>!p.a[id]||!p.b[id]).length,out=[];
+  if(unset)out.push(`${unset} support(s) still have no choice for one of the learners. You can leave them, but your profile is more useful when it is complete.`);
+  if(!diff)out.push('You made the same choices for both learners. Consider whether prior knowledge changes how much explanation helps: support that guides a beginner can become redundant for someone who already knows the relation.');
+  else out.push(`You varied ${diff} support(s) between the learners. Supports that help a beginner, such as integrated labels or a partly guided diagram, may be redundant for an experienced learner (expertise reversal).`);
+  if(p.b.concise==='keep'||p.b.problem==='keep')out.push('For Sam, a concise representation or an application problem can keep the task demanding without repeating what he already knows.');
+  if(p.a.labels==='keep'||p.a.narration==='keep')out.push('For Jordan, integrated labels or explanatory narration can reduce the search for information that must be used together.');
+  out.push('Neither profile has a fixed answer: not every expert rejects support, and not every beginner needs the same amount of explanation.');
+  if(p.why.trim().length<15)out.push('Your justification is still short. Name the difference and the reason connected to prior knowledge.');
+  return `<div class="fb info"><ul style="margin:0;padding-left:18px">${out.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`}
+function transferScreen(){let t=S.transfer,opt=(name,list)=>list.map(([v,l])=>`<label style="display:flex;gap:6px;font-size:13.5px"><input type="radio" name="${name}" value="${v}" ${t[name]===v?'checked':''} data-act="tr" data-f="${name}"> ${esc(l)}</label>`).join('');
+  let fb='';if(S.transferDone){let p=TRANSFER.protect.find(x=>x[0]===t.protect),d=TRANSFER.direct.find(x=>x[0]===t.direct);
+    fb=`<div class="fb info"><ul style="margin:0;padding-left:18px"><li>${p?(p[2]?'Your protection change reduces a demand that does not serve the goal while keeping the necessary diagram.':'This change does not protect attention: it either removes necessary information or adds competing material.'):'Choose a protection change.'}</li><li>${d?(d[2]?'Your directing change points processing toward the central relation.':'This change does not set a priority on the central relation.'):'Choose a directing change.'}</li><li>Use the criteria below to review your justification. This check is not graded automatically.</li></ul></div>
+    <table class="rep"><thead><tr><th>Criterion</th><th>Full performance</th><th>Self-review</th></tr></thead><tbody>${[['diag','Diagnosis','Identifies a competing demand and explains its effect on selection, organization or integration.'],['prot','Protection','Reduces an unnecessary demand without removing necessary information.'],['dirc','Direction','Points processing to a central relation and justifies the choice.'],['aud','Fit to the audience','Relates the support to prior knowledge and states a condition or limit.']].map(([k,n,d])=>`<tr><th scope="row">${n}</th><td>${d}</td><td><select data-act="selfrev" data-k="${k}" aria-label="Self-review for ${n}">${['','0','1','2','3'].map(v=>`<option ${t.self[k]===v?'selected':''}>${v}</option>`).join('')}</select></td></tr>`).join('')}</tbody></table><p class="small">0 = absent or incompatible · 1 = action named without a mechanism · 2 = relevant action, partial justification · 3 = full performance.</p>`}
+  return `<div class="scr-k">Integrative check</div><div class="scr-h">A new case: an introductory thermostat module for adults.</div>
+   <p class="scr-p">The module has a necessary diagram, a caption placed on a separate page, an audio track that repeats all on-screen text word for word, and an animated decorative banner.</p>
+   <div class="grid2" style="grid-template-columns:1fr 1fr"><div class="card"><b>One change that protects attention</b>${opt('protect',TRANSFER.protect)}</div><div class="card"><b>One change that directs attention</b>${opt('direct',TRANSFER.direct)}</div></div>
+   <div class="grid2" style="grid-template-columns:1fr 1fr;margin-top:8px"><div class="q"><div class="qt">Adapt one change for adults new to the topic.</div><textarea class="tx" data-field="transfer.adaptA">${esc(t.adaptA)}</textarea></div><div class="q"><div class="qt">Adapt it for adults who already know how thermostats work.</div><textarea class="tx" data-field="transfer.adaptB">${esc(t.adaptB)}</textarea></div></div>
+   <div class="q"><div class="qt">Justify your choices in two or three sentences.</div><textarea class="tx" data-field="transfer.why">${esc(t.why)}</textarea></div>
+   ${fb}<div class="scr-row">${S.transferDone?`<button class="btn pri" data-act="toReport">See my session report</button>`:`<button class="btn pri" data-act="transferCheck">Review my proposal</button>`}<button class="btn" data-act="toReport">Skip to the report</button></div>`}
+function sessionRow(i){let s=S.sessions[i],L=LESSONS[s.lesson||S.order[i]],c=t=>{let k=L.qs.findIndex(q=>q.t===t);return s.first[k]===L.qs[k].a?'✓':s.second[k]===L.qs[k].a?'✓ after revision':'✗'};
+  let setup=s.cfg?(i===0?'Initial setup':Object.entries(cfgKeys(s.cfg,s.phone)).map(([d,v])=>`${d}: ${v}`).join(', ')):'—';
+  return `<tr><th scope="row">${i+1} · ${esc(L.title)}</th><td>${c('recognition')}</td><td>${c('understanding')}</td><td>${c('application')}</td><td>${s.ntfOpened}/${s.ntfShown}</td><td class="small">${esc(setup)}</td></tr>`}
+function reportScreen(){
+  return `<div class="scr-k">Session report</div><div class="scr-h">What you did in the Focus Room</div>
+   <table class="rep"><thead><tr><th>Session</th><th>Recognition</th><th>Understanding</th><th>Application</th><th>Phone alerts opened / shown</th><th>Setup</th></tr></thead><tbody>${[0,1,2].map(sessionRow).join('')}</tbody></table>
+   <p class="small">Results can be equal, better or worse across sessions. The three texts are different and share a structure, so learning from one round to the next is possible. This report describes your actions; it does not measure attention or predict retention.</p>
+   <div class="q"><div class="qt">Which change will you try in your own study routine, why, and what evidence will help you evaluate it?</div><textarea class="tx" data-field="commitment" aria-label="Your commitment">${esc(S.commitment)}</textarea><div class="small">Name one protection, one direction and the evidence you will follow.</div></div>
+   <div class="scr-row"><button class="btn" data-act="copyRefl">Copy my reflection</button><button class="btn" data-act="exportTxt">Download summary (.txt)</button><button class="btn" data-act="exportJson">Download data (.json)</button><button class="btn" data-act="restart">Start again</button></div><div id="copyMsg" class="small" role="status"></div>`}
+
+/* ================= Screen interaction ================= */
+function bindScreen(){
+  scr.querySelectorAll('textarea[data-field]').forEach(t=>t.oninput=()=>{let [a,b]=t.dataset.field.split('.');if(b)S[a][b]=t.value;else S[a]=t.value});
+  scr.querySelectorAll('[data-arr]').forEach(s=>s.onchange=()=>{});
+  scr.querySelectorAll('[data-leg]').forEach(el=>{el.ondragstart=e=>{e.dataTransfer.setData('text/plain',el.dataset.leg)};el.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();selectLegend(+el.dataset.leg)}}});
+  scr.querySelectorAll('[data-drop]').forEach(el=>{el.ondragover=e=>{e.preventDefault();el.classList.add('drop')};el.ondragleave=()=>el.classList.remove('drop');el.ondrop=e=>{e.preventDefault();let n=+e.dataTransfer.getData('text/plain');placeLegend(n,+el.dataset.drop)}});
+  scr.querySelectorAll('input[data-act],select[data-act]').forEach(el=>el.onchange=()=>act(el.dataset.act,el))}
+scr.addEventListener('click',e=>{let leg=e.target.closest('[data-leg]');if(leg&&!e.target.closest('button')){selectLegend(+leg.dataset.leg);return}
+  let box=e.target.closest('[data-drop]');if(box&&S.legendSel){placeLegend(S.legendSel,+box.dataset.drop);return}
+  let hk=e.target.closest('[data-hk]');if(hk&&S.direct.hlMode&&S.step==='study'&&S.phase==='s3'){let k=hk.dataset.hk;S.direct.hl.has(k)?S.direct.hl.delete(k):S.direct.hl.add(k);hk.classList.toggle('hl');return}
+  let b=e.target.closest('button[data-act]');if(b)act(b.dataset.act,b)});
+function selectLegend(n){S.legendSel=S.legendSel===n?null:n;render();announce(S.legendSel?`Label ${n} selected. Select its part in the diagram.`:'Selection cleared.')}
+function placeLegend(n,target){if(n!==target){S.legendSel=null;render();announce(`Label ${n} does not belong to part ${target}. Labels can only be placed on their own part.`);return}S.pendingCfg.legend[n]='integrated';S.legendSel=null;S.consequence=null;render();announce(`Label ${n} placed next to part ${n}.`)}
+function act(a,el){let i=sIdx(),ses=cur();
+  switch(a){
+   case 'start':startSession(0);break;
+   case 'toSetup':S.pendingCfg=JSON.parse(JSON.stringify(S.cfg));S.consequence=null;S.step='setup';setView('screen');render();break;
+   case 'backMission':S.step='mission';render();break;
+   case 'goDesk':setView('desk');break;
+   case 'cfgFeed':S.pendingCfg.feed=el.value;render();break;
+   case 'cfgNarr':S.pendingCfg.narration=el.value;render();break;
+   case 'legRemove':S.pendingCfg.legend[el.dataset.n]='removed';render();break;
+   case 'decoRemove':S.pendingCfg.deco=false;render();break;
+   case 'sumRemove':S.pendingCfg.summary=false;render();break;
+   case 'restoreAll':{let c=S.pendingCfg;c.deco=true;c.summary=true;Object.keys(c.legend).forEach(k=>{if(c.legend[k]==='removed')c.legend[k]='separate'});S.consequence=null;render();break}
+   case 'feedMin':if(S.step==='setup'){S.pendingCfg.feed='minimized';render()}else{S.study.feedMin=true;render()}break;
+   case 'feedClose':if(S.step==='setup'){S.pendingCfg.feed='closed';render()}else{S.study.feedOpen=false;S.study.feedMin=true;render()}break;
+   case 'feedToggle':if(S.step==='setup'){S.pendingCfg.feed='open';render()}else{S.study.feedMin=!S.study.feedMin;S.study.feedOpen=true;if(!S.study.feedMin){ses.feedOpened++;S.study.feedCount=0}render()}break;
+   case 'confirmSetup':if(Object.values(S.pendingCfg.legend).includes('removed')){S.consequence='Consequence: the diagram now shows numbers without saying which part is the sensor, the controller or the device. That information is needed for the task.';render();break}
+   case 'confirmAnyway':S.cfg=S.pendingCfg;S.consequence=null;S.step='mission';if(i===1){S.step='study';beginStudy()}else render();break;
+   case 'beginStudy':beginStudy();break;
+   case 'finishStudy':finishStudy();break;
+   case 'ans':ses.first[+el.dataset.k]=+el.value;break;
+   case 'self':ses.self=el.value;break;
+   case 'checkQuiz':{let L=lessonFor(i);if(L.qs.some((q,k)=>ses.first[k]==null)){announce('Answer all three questions first.');let m=scr.querySelector('.scr-row');if(m&&!m.querySelector('.warn'))m.insertAdjacentHTML('beforeend','<span class="small warn" role="status">Answer all three questions first.</span>');break}S.step='feedback';render();announce('Feedback is on the screen.');break}
+   case 'rev':ses.second[+el.dataset.k]=+el.value;render();break;
+   case 'nextPhase':if(i<2)startSession(i+1);else{S.phase='profile';render()}break;
+   case 'playNarr':speak(S.cfg.narration==='repeat'||(S.step==='setup'&&S.pendingCfg.narration==='repeat')?lessonFor(S.step==='setup'?Math.max(0,i-1):i).spans.join(' '):lessonFor(S.step==='setup'?Math.max(0,i-1):i).narr);break;
+   case 'hlMode':S.direct.hlMode=!S.direct.hlMode;render();break;
+   case 'addArrow':{let g=n=>scr.querySelector(`[data-arr="${n}"]`).value,f=+g('f')-1,t=+g('t')-1,rel=g('rel');if(f===t){announce('Choose two different parts.');break}S.direct.arrows=S.direct.arrows.filter(x=>!(x.f===f&&x.t===t));S.direct.arrows.push({f,t,rel});render();announce(`Arrow added from ${f+1} to ${t+1}: ${rel}.`);break}
+   case 'clearArrows':S.direct.arrows=[];render();break;
+   case 'openNote':openNotebook();break;
+   case 'prof':S.profile[el.dataset.who][el.dataset.id]=el.value;break;
+   case 'profileCheck':S.profileDone=true;render();break;
+   case 'toTransfer':S.phase='transfer';render();break;
+   case 'tr':S.transfer[el.dataset.f]=el.value;break;
+   case 'selfrev':S.transfer.self[el.dataset.k]=el.value;break;
+   case 'transferCheck':S.transferDone=true;render();break;
+   case 'toReport':S.phase='report';render();break;
+   case 'copyRefl':{let t=reflectionText();(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>{$('copyMsg').textContent='Copied. You can paste it into the chapter reflection.'}).catch(()=>{$('copyMsg').textContent='Copy was blocked by the browser. Use the .txt download instead.'});break}
+   case 'exportTxt':download('focus-room-summary.txt',summaryText(),'text/plain');break;
+   case 'exportJson':download('focus-room-data.json',JSON.stringify(exportData(),null,2),'application/json');break;
+   case 'restart':restart(true);break}}
+function speak(t){if(!('speechSynthesis'in window)){announce('Narration is not available in this browser. The transcript is shown on the screen.');return}speechSynthesis.cancel();let u=new SpeechSynthesisUtterance(t);u.lang='en-US';u.rate=.95;speechSynthesis.speak(u)}
+
+/* ================= Session flow ================= */
+function startSession(i){S.phase=['s1','s2','s3'][i];S.step='mission';let ses=S.sessions[i];ses.lesson=S.order[i];if(i===0)S.cfg=baseCfg();S.direct.hlMode=false;setView('screen');render();announce(`Session ${i+1}. Read the mission on the screen.`)}
+function beginStudy(){let i=sIdx(),ses=cur();ses.cfg=JSON.parse(JSON.stringify(S.cfg));ses.phone=phoneSnapshot();ses.ntfArrived=ses.ntfShown=ses.ntfOpened=0;
+  S.study={feedOpen:S.cfg.feed==='open',feedMin:S.cfg.feed==='minimized',feedCount:0,feedShown:1,ntf:[],timers:[]};S.step='study';setView('screen');render();
+  let L=lessonFor(i);
+  [9,27].forEach((t,k)=>S.study.timers.push(setTimeout(()=>phoneNotify(L.ntf[k]),t*1000)));
+  if(S.cfg.feed!=='closed')[14,33].forEach(t=>S.study.timers.push(setTimeout(()=>{S.study.feedShown=Math.min(3,(S.study.feedShown||1)+1);if(S.study.feedMin)S.study.feedCount++;if(S.step==='study')render()},t*1000)));
+  announce(`Studying: ${L.title}. Select Finish studying when you are done.`)}
+function finishStudy(){S.study.timers.forEach(clearTimeout);if('speechSynthesis'in window)speechSynthesis.cancel();let ses=cur();ses.phone=phoneSnapshot();if(sIdx()===2){ses.direct={hl:[...S.direct.hl],arrows:S.direct.arrows.slice(),note:S.direct.note}}
+  phoneState.lit=false;drawPhoneTexture();S.step='quiz';setView('screen');render();announce('The material is hidden. Answer the three questions.')}
+function phoneNotify(n){if(S.step!=='study')return;let ses=cur();ses.ntfArrived++;S.study.ntf.push(n);let ph=phoneSnapshot();
+  if(!ph.silenced&&ph.pose!=='box'){ses.ntfShown++;phoneState.lit=true;phoneState.buzz=1;phoneState.lastNtf=n;drawPhoneTexture();updateCue()}}
+function phoneStatusText(){let p=phoneSnapshot();return p.pose==='box'?'in the storage box':`${p.silenced?'silenced':'notifications on'}, ${p.pose==='stand'?'on its stand next to the monitor':p.away?'away from your reading position':'on the desk near you'}`}
+
+/* ================= Phone, notebook DOM ================= */
+function renderPhone(){let ph=$('phoneUI'),p=phoneState,can=S.phase!=='s1'&&S.phase!=='entry';
+  let list=(S.study&&S.step==='study'?S.study.ntf:[]);
+  ph.innerHTML=`<div class="clock">9:41</div><div class="date">Wednesday</div>${list.length?list.map((n,k)=>`<div class="ntf"><small>${esc(n[0])}</small>${p.opened&&p.opened.has(k)?esc(n[1]):'New message'}${p.opened&&p.opened.has(k)?'':`<div><button data-pact="open" data-k="${k}">Open</button></div>`}</div>`).join(''):`<div class="ntf"><small>No new notifications</small>${p.silenced?'Notifications are silenced.':'Notifications are on.'}</div>`}
+   <div class="sp"></div>${can?`<button class="pbtn ${p.silenced?'on':''}" data-pact="silence" aria-pressed="${p.silenced}">${p.silenced?'Notifications silenced':'Silence notifications'}</button>`:''}<button class="pbtn" data-pact="back">Back to ${S.step==='study'?'studying':'the desk'}</button>`}
+$('phoneUI').addEventListener('click',e=>{let b=e.target.closest('[data-pact]');if(!b)return;let a=b.dataset.pact;
+  if(a==='open'){let k=+b.dataset.k;phoneState.opened=phoneState.opened||new Set();if(!phoneState.opened.has(k)){phoneState.opened.add(k);if(S.step==='study')cur().ntfOpened++}renderPhone();announce('Message opened.')}
+  if(a==='silence'){phoneState.silenced=!phoneState.silenced;if(phoneState.silenced)phoneState.lit=false;drawPhoneTexture();renderPhone();render();announce(phoneState.silenced?'Phone notifications silenced.':'Phone notifications on.')}
+  if(a==='back'){setView(S.step==='study'||S.phase==='entry'?'screen':'desk')}});
+function renderNote(){let n=$('noteUI'),can=S.phase==='s3'&&S.step==='study';
+  n.innerHTML=`<h4>Notes</h4>${can?`<label class="small" for="noteTx">Write the relation in your own words.</label><textarea id="noteTx" aria-label="Notebook">${esc(S.direct.note)}</textarea>`:`<p>${S.direct.note?esc(S.direct.note):'This notebook will be useful later in the session.'}</p><div style="flex:1"></div>`}<div><button class="btn" data-nact="back">Back to ${can?'studying':'the desk'}</button></div>`;
+  let t=$('noteTx');if(t)t.oninput=()=>{S.direct.note=t.value;drawNoteTexture()}}
+$('noteUI').addEventListener('click',e=>{let b=e.target.closest('[data-nact]');if(b)setView(S.phase==='s3'&&S.step==='study'?'screen':'desk')});
+function openNotebook(){S.direct.noteOpened=true;setView('note');setTimeout(()=>$('noteTx')?.focus({preventScroll:true}),REDUCED()?0:900)}
+
+/* ================= Records ================= */
+function exportData(){return{activity:'Personal Learning Lab · Focus Room · Episode I',chapter:2,version:'1.0',date:new Date().toISOString().slice(0,10),lessonOrder:S.order,
+  sessions:S.sessions.map((s,i)=>{let L=LESSONS[s.lesson||S.order[i]];return{session:i+1,lesson:L.title,setup:s.cfg?cfgKeys(s.cfg,s.phone):null,phone:s.phone,notifications:{shown:s.ntfShown,opened:s.ntfOpened},feedReopened:s.feedOpened,selfRating:s.self,
+   answers:L.qs.map((q,k)=>({type:q.t,firstAttemptCorrect:s.first[k]===q.a,revisedCorrect:s.second[k]==null?null:s.second[k]===q.a})),directing:s.direct||null}}),
+  profile:S.profile,integrativeCheck:{protect:S.transfer.protect,direct:S.transfer.direct,adaptBeginners:S.transfer.adaptA,adaptExperienced:S.transfer.adaptB,justification:S.transfer.why,selfReview:S.transfer.self},commitment:S.commitment}}
+function reflectionText(){return `Focus Room · Episode I\nMy commitment: ${S.commitment||'(not written yet)'}\nProfile justification: ${S.profile.why||'—'}\nIntegrative check: ${S.transfer.why||'—'}`}
+function summaryText(){let d=exportData(),l=[d.activity,`Date: ${d.date}`,''];d.sessions.forEach(s=>{l.push(`Session ${s.session} (${s.lesson})`);if(s.setup)l.push('  Setup: '+Object.entries(s.setup).map(([k,v])=>`${k} ${v}`).join('; '));l.push(`  Phone alerts shown/opened: ${s.notifications.shown}/${s.notifications.opened}`);s.answers.forEach(a=>l.push(`  ${a.type}: ${a.firstAttemptCorrect?'correct':'incorrect'} on first attempt${a.revisedCorrect!=null?`; revision ${a.revisedCorrect?'correct':'incorrect'}`:''}`))});
+  l.push('',reflectionText(),'','This summary describes actions in a formative activity. It is not a measure of attention or of future retention.');return l.join('\n')}
+function download(name,text,type){let u=URL.createObjectURL(new Blob([text],{type}));let a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),1500)}
+
+/* ================= 3D room ================= */
+const stage=$('stage'),cv=$('world');
+let THREEOK=!!window.THREE,renderer,scene,camera,ray,ndc,room,clipPlanes,monitorPlane,monTex,monCtx,phoneG,phoneScreen,phoneTex,phoneCtx,stand,boxG,noteG,noteTex,noteCtx,mug,outline,running=true;
+const phoneState={pose:'stand',silenced:false,lit:false,buzz:0,opened:null,x:0,z:0};
+const DESK_Y=37.13,SCREEN={x:104.22,y0:42.75,y1:55.0,z0:-137.75,z1:-115.25};
+const STAND={x:100.6,z:-113.2},BOX={x:100.5,z:-166,w:9,d:7},NOTE={x:95.6,z:-141.6},READ={x:88,z:-126.5};
+let reduceMotion=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;const REDUCED=()=>reduceMotion;
+let view='room',camAnim=null,orbit={yaw:.18,pitch:.82,dist:265},drag=null,hoverObj=null;
+function phoneSnapshot(){let away=phoneState.pose==='flat'&&Math.hypot(phoneState.x-READ.x,phoneState.z-READ.z)>34;return{pose:phoneState.pose,silenced:phoneState.silenced,away}}
+
+function canvasTex(w,h){let c=document.createElement('canvas');c.width=w;c.height=h;let t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;t.anisotropy=8;return [c.getContext('2d'),t]}
+function init3D(){
+  try{renderer=new THREE.WebGLRenderer({canvas:cv,antialias:true});}catch(e){return false}
+  if(!renderer.getContext())return false;
+  renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));renderer.outputEncoding=THREE.sRGBEncoding;renderer.localClippingEnabled=true;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.05;
+  scene=new THREE.Scene();scene.background=new THREE.Color(0xe7eef2);
+  camera=new THREE.PerspectiveCamera(40,1,.5,4000);ray=new THREE.Raycaster();ndc=new THREE.Vector2();
+  scene.add(new THREE.HemisphereLight(0xffffff,0xb9a58c,.95));let sun=new THREE.DirectionalLight(0xfff3e2,.75);sun.position.set(220,260,-60);scene.add(sun);
+  let fill=new THREE.PointLight(0xfff4e6,.45,260);fill.position.set(70,90,-110);scene.add(fill);
+  clipPlanes=[new THREE.Plane(new THREE.Vector3(0,-1,0),82)];
+  buildProps();resize();new ResizeObserver(resize).observe(stage);
+  new IntersectionObserver(en=>{running=en[0].isIntersecting},{threshold:.01}).observe(stage);
+  requestAnimationFrame(loop);return true}
+function loadRoom(){
+  let loader=new THREE.GLTFLoader();if(window.MeshoptDecoder)loader.setMeshoptDecoder(MeshoptDecoder);
+  loader.load('room.glb',g=>{room=g.scene;scene.add(room);room.updateMatrixWorld(true);
+    let mugParts=[];
+    room.traverse(o=>{if(!o.isMesh)return;(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>{m.clippingPlanes=clipPlanes;m.needsUpdate=true});
+      let b=new THREE.Box3().setFromObject(o);
+      const inside=r=>b.min.x>=r[0]&&b.min.y>=r[1]&&b.min.z>=r[2]&&b.max.x<=r[3]&&b.max.y<=r[4]&&b.max.z<=r[5];
+      if(inside([92.3,36.9,-143.8,98.4,37.8,-140.1]))o.visible=false; /* original phone, replaced by an interactive one */
+      if(inside([100.8,36.9,-145,105.8,40.6,-141.2]))mugParts.push(o)});
+    mug=new THREE.Group();scene.add(mug);let c=new THREE.Box3();mugParts.forEach(o=>c.expandByObject(o));let ctr=c.getCenter(new THREE.Vector3());mug.position.set(ctr.x,DESK_Y,ctr.z);mug.updateMatrixWorld(true);mugParts.forEach(o=>mug.attach(o));mug.userData={kind:'mug',r:2,home:mug.position.clone()};
+    $('loading').hidden=true;setView('room',true);render()},
+   x=>{if(x.total){$('prog').value=Math.round(x.loaded/x.total*100)}},
+   err=>{$('loadMsg').textContent='The 3D room could not be loaded. The activity continues in text mode.';setTimeout(()=>{$('loading').hidden=true;goFlat()},1400)})}
+function buildProps(){
+  /* Monitor screen plane (texture used when the live screen is not shown) */
+  [monCtx,monTex]=canvasTex(1024,558);
+  monitorPlane=new THREE.Mesh(new THREE.PlaneGeometry(SCREEN.z1-SCREEN.z0,SCREEN.y1-SCREEN.y0),new THREE.MeshBasicMaterial({map:monTex,toneMapped:false}));
+  monitorPlane.position.set(SCREEN.x-.04,(SCREEN.y0+SCREEN.y1)/2,(SCREEN.z0+SCREEN.z1)/2);monitorPlane.rotation.y=-Math.PI/2;monitorPlane.userData={kind:'monitor'};scene.add(monitorPlane);
+  /* Phone and stand */
+  let std=(c,o={})=>new THREE.MeshStandardMaterial({color:c,roughness:.5,metalness:.1,...o});
+  stand=new THREE.Group();let sb=new THREE.Mesh(new THREE.BoxGeometry(3.2,.35,3.4),std(0x3b4650,{metalness:.5}));sb.position.y=.18;stand.add(sb);let sback=new THREE.Mesh(new THREE.BoxGeometry(.35,4.2,2.6),std(0x3b4650,{metalness:.5}));sback.position.set(1.1,2.1,0);sback.rotation.z=-.28;stand.add(sback);stand.position.set(STAND.x+.6,DESK_Y,STAND.z);scene.add(stand);
+  phoneG=new THREE.Group();let body=new THREE.Mesh(new THREE.BoxGeometry(2.95,.32,5.9),std(0x1c242b,{roughness:.35,metalness:.4}));phoneG.add(body);
+  [phoneCtx,phoneTex]=canvasTex(256,512);phoneScreen=new THREE.Mesh(new THREE.PlaneGeometry(2.65,5.5),new THREE.MeshBasicMaterial({map:phoneTex,toneMapped:false}));phoneScreen.rotation.x=-Math.PI/2;phoneScreen.position.y=.165;phoneG.add(phoneScreen);
+  phoneG.userData={kind:'phone',r:3.5};scene.add(phoneG);
+  /* Storage box */
+  boxG=new THREE.Group();let wood=std(0xa8865f,{roughness:.8});let base=new THREE.Mesh(new THREE.BoxGeometry(BOX.w,.3,BOX.d),wood);base.position.y=.15;boxG.add(base);
+  [[0,BOX.d/2-.15,BOX.w,.3],[0,-BOX.d/2+.15,BOX.w,.3],[BOX.w/2-.15,0,.3,BOX.d],[-BOX.w/2+.15,0,.3,BOX.d]].forEach(([x,z,w,d])=>{let m=new THREE.Mesh(new THREE.BoxGeometry(w,2.4,d),wood);m.position.set(x,1.2,z);boxG.add(m)});
+  boxG.position.set(BOX.x,DESK_Y,BOX.z);boxG.userData={kind:'box'};scene.add(boxG);
+  /* Notebook (open, spiral) */
+  noteG=new THREE.Group();let cover=new THREE.Mesh(new THREE.BoxGeometry(6.8,.22,8.7),std(0x2f5d73,{roughness:.7}));cover.position.y=.11;noteG.add(cover);
+  [noteCtx,noteTex]=canvasTex(384,512);let page=new THREE.Mesh(new THREE.PlaneGeometry(6,8),new THREE.MeshStandardMaterial({map:noteTex,roughness:.9}));page.rotation.x=-Math.PI/2;page.position.y=.235;noteG.add(page);
+  noteG.position.set(NOTE.x,DESK_Y,NOTE.z);noteG.rotation.y=-Math.PI/2-.06;noteG.userData={kind:'note',r:6};scene.add(noteG);
+  outline=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(1,1,1)),new THREE.LineBasicMaterial({color:0xcfaa65}));outline.visible=false;scene.add(outline);
+  placePhone();drawPhoneTexture();drawNoteTexture();drawMonitorTexture()}
+function placePhone(){let p=phoneState;if(!phoneG)return;
+  if(p.pose==='stand'){phoneG.position.set(STAND.x,DESK_Y+3.05,STAND.z);phoneG.rotation.set(0,0,0);phoneG.rotation.order='YXZ';phoneG.rotation.y=-Math.PI/2;phoneG.rotation.x=1.29}
+  else if(p.pose==='box'){phoneG.position.set(BOX.x,DESK_Y+.48,BOX.z);phoneG.rotation.set(0,0,0);phoneG.rotation.order='YXZ';phoneG.rotation.y=-Math.PI/2+.3}
+  else{phoneG.position.set(p.x,DESK_Y+.17,p.z);phoneG.rotation.set(0,0,0);phoneG.rotation.order='YXZ';phoneG.rotation.y=-Math.PI/2}}
+function drawPhoneTexture(){if(!phoneCtx)return;let g=phoneCtx,p=phoneState;g.fillStyle=p.lit&&!p.silenced?'#20384a':'#0b1015';g.fillRect(0,0,256,512);
+  if(p.lit&&!p.silenced){g.fillStyle='#ffffff';g.font='300 58px Arial';g.textAlign='center';g.fillText('9:41',128,120);g.fillStyle='#ffffff2a';g.beginPath();g.roundRect(18,180,220,96,18);g.fill();g.fillStyle='#cfe0ea';g.font='700 22px Arial';g.textAlign='left';g.fillText(p.lastNtf?p.lastNtf[0]:'',34,220);g.fillStyle='#fff';g.font='20px Arial';g.fillText('New message',34,254)}
+  else if(p.silenced){g.fillStyle='#cfaa65';g.font='700 40px Arial';g.textAlign='center';g.fillText('☾',128,270)}
+  phoneTex.needsUpdate=true}
+function drawNoteTexture(){if(!noteCtx)return;let g=noteCtx;g.fillStyle='#fffdf6';g.fillRect(0,0,384,512);g.strokeStyle='#cfe0ea';for(let y=40;y<512;y+=28){g.beginPath();g.moveTo(0,y);g.lineTo(384,y);g.stroke()}g.strokeStyle='#e5a3a3';g.beginPath();g.moveTo(40,0);g.lineTo(40,512);g.stroke();
+  g.fillStyle='#1f3442';g.font='22px Georgia';let words=(S&&S.direct.note||'').split(/\s+/),line='',y=62;for(const w of words){let t=line?line+' '+w:w;if(g.measureText(t).width>310&&line){g.fillText(line,52,y);y+=28;line=w;if(y>500)break}else line=t}if(line&&y<=500)g.fillText(line,52,y);noteTex.needsUpdate=true}
+function drawMonitorTexture(){if(!monCtx||!S)return;let g=monCtx;g.fillStyle='#f7f9fa';g.fillRect(0,0,1024,558);g.fillStyle='#0f2c40';g.fillRect(0,0,1024,34);g.fillStyle='#fff';g.font='700 18px Arial';g.fillText('Focus Room',14,23);
+  let titles={entry:'Welcome to your study room',s1:'Session 1 · Experience the problem',s2:'Session 2 · Protect your attention',s3:'Session 3 · Direct your attention',profile:'Build your learning profile',transfer:'Integrative check',report:'Session report'};
+  g.fillStyle='#092f49';g.font='700 46px Georgia';g.fillText(titles[S.phase],48,170);g.fillStyle='#33444f';g.font='28px Arial';g.fillText('Select the monitor or choose Screen to read.',48,232);monTex.needsUpdate=true}
+
+/* ---- Views and camera ---- */
+const VIEWS={
+  room:()=>{let t=new THREE.Vector3(62,20,-106),o=orbit;return{pos:new THREE.Vector3(t.x-Math.cos(o.pitch)*Math.cos(o.yaw)*o.dist,t.y+Math.sin(o.pitch)*o.dist,t.z+Math.cos(o.pitch)*Math.sin(o.yaw)*o.dist),tgt:t,fov:40}},
+  desk:()=>{let a=camera?camera.aspect:1.7,dist=Math.max(66,35/(Math.tan(21*Math.PI/180)*a)),dir=new THREE.Vector3(-43,50,0).normalize(),t=new THREE.Vector3(99,36,a<1?-139:-134);return{pos:t.clone().add(dir.multiplyScalar(dist)),tgt:t,fov:42}},
+  screen:()=>{let a=camera?camera.aspect:1.7,h=(SCREEN.y1-SCREEN.y0)+8.2,w=(SCREEN.z1-SCREEN.z0)+3,fov=42,tv=Math.tan(fov*Math.PI/360),d=Math.max(h/2/tv,w/2/(tv*a));let cy=(SCREEN.y0-5.6+SCREEN.y1+2.6)/2;return{pos:new THREE.Vector3(SCREEN.x-d,cy+1.2,(SCREEN.z0+SCREEN.z1)/2+1.8),tgt:new THREE.Vector3(SCREEN.x,cy,(SCREEN.z0+SCREEN.z1)/2+1.8),fov}},
+  phone:()=>{let p=phoneScreen.getWorldPosition(new THREE.Vector3()),q=phoneScreen.getWorldQuaternion(new THREE.Quaternion()),n=new THREE.Vector3(0,0,1).applyQuaternion(q);let a=camera.aspect,d=Math.max(7.4,(a<1?5.2/a:0)+3);return{pos:p.clone().add(n.multiplyScalar(d)),tgt:p,fov:42,up:new THREE.Vector3(0,1,0).applyQuaternion(q)}},
+  note:()=>{let p=noteG.getWorldPosition(new THREE.Vector3());let a=camera.aspect,d=Math.max(12.5,a<1?10/a:0);return{pos:new THREE.Vector3(p.x-.01,p.y+d,p.z),tgt:p,fov:42,up:new THREE.Vector3(1,0,0)}}};
+function setView(v,instant){if(!THREEOK||!camera){view=v;layoutGlue();return}
+  if(v==='screen'&&S.phase==='entry'){S.tut.monitor=true;if(S.tut.moved)S.tut.returned=true}
+  view=v;let goal=VIEWS[v]();camera.up.copy(goal.up||new THREE.Vector3(0,1,0));
+  if(instant||REDUCED()){camera.position.copy(goal.pos);camera.fov=goal.fov;camera.updateProjectionMatrix();camera.lookAt(goal.tgt);camAnim=null}
+  else{let look=new THREE.Vector3();camera.getWorldDirection(look);camAnim={t:0,p0:camera.position.clone(),q0:camera.quaternion.clone(),f0:camera.fov,goal}}
+  document.querySelectorAll('[data-view]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.view===v));
+  if(S&&S.phase==='entry')render();layoutGlue();updateCue()}
+function resize(){if(!renderer)return;let w=stage.clientWidth,h=stage.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();if(!camAnim&&view!=='room'){let g=VIEWS[view]();camera.position.copy(g.pos);camera.fov=g.fov;camera.updateProjectionMatrix();camera.lookAt(g.tgt)}}
+function loop(now){requestAnimationFrame(loop);if(!running||!renderer)return;
+  if(camAnim){let a=camAnim;a.t=Math.min(1,a.t+1/48);let e=a.t<.5?2*a.t*a.t:1-Math.pow(-2*a.t+2,2)/2;let g=a.goal;camera.position.lerpVectors(a.p0,g.pos,e);
+    let m=new THREE.Matrix4().lookAt(g.pos,g.tgt,camera.up);let q1=new THREE.Quaternion().setFromRotationMatrix(m);camera.quaternion.copy(a.q0).slerp(q1,e);camera.fov=a.f0+(g.fov-a.f0)*e;camera.updateProjectionMatrix();if(a.t>=1)camAnim=null}
+  else if(view==='room'){let g=VIEWS.room();camera.position.copy(g.pos);camera.lookAt(g.tgt)}
+  if(phoneState.buzz>0&&!REDUCED()){phoneState.buzz-=.02;let k=Math.sin(now*.09)*.12*phoneState.buzz;placePhone();phoneG.position.x+=k}else if(phoneState.buzz>0){phoneState.buzz=0}
+  renderer.render(scene,camera);layoutGlue()}
+/* ---- DOM surfaces glued to 3D quads (projective transform) ---- */
+function adj(m){return[m[4]*m[8]-m[5]*m[7],m[2]*m[7]-m[1]*m[8],m[1]*m[5]-m[2]*m[4],m[5]*m[6]-m[3]*m[8],m[0]*m[8]-m[2]*m[6],m[2]*m[3]-m[0]*m[5],m[3]*m[7]-m[4]*m[6],m[1]*m[6]-m[0]*m[7],m[0]*m[4]-m[1]*m[3]]}
+function mm(a,b){let c=[];for(let i=0;i<3;i++)for(let j=0;j<3;j++){let s=0;for(let k=0;k<3;k++)s+=a[3*i+k]*b[3*k+j];c[3*i+j]=s}return c}
+function mv(m,v){return[m[0]*v[0]+m[1]*v[1]+m[2]*v[2],m[3]*v[0]+m[4]*v[1]+m[5]*v[2],m[6]*v[0]+m[7]*v[1]+m[8]*v[2]]}
+function basis(x1,y1,x2,y2,x3,y3,x4,y4){let m=[x1,x2,x3,y1,y2,y3,1,1,1],v=mv(adj(m),[x4,y4,1]);return mm(m,[v[0],0,0,0,v[1],0,0,0,v[2]])}
+function proj2(w,h,d){let t=mm(basis(...d),adj(basis(0,0,w,0,0,h,w,h)));for(let i=0;i<9;i++)t[i]/=t[8];return `matrix3d(${t[0]},${t[3]},0,${t[6]},${t[1]},${t[4]},0,${t[7]},0,0,1,0,${t[2]},${t[5]},0,${t[8]})`}
+function projectPts(pts){let w=stage.clientWidth,h=stage.clientHeight,out=[];for(const p of pts){let v=p.clone().project(camera);if(v.z>1||v.z<-1)return null;out.push((v.x+1)/2*w,(1-v.y)/2*h)}return out}
+function glue(el,pts,w,h,show){if(!show||!pts){el.classList.add('off');return 0}el.classList.remove('off');let m=proj2(w,h,pts.map(v=>Math.round(v*4)/4));if(el._m!==m){el._m=m;el.style.transform=m}let dx=pts[2]-pts[0];return Math.abs(dx)}
+function layoutGlue(){if(!S)return;let sw=$('scrWrap'),pw=$('phoneWrap'),nw=$('noteWrap');
+  if(!THREEOK||!camera||stage.classList.contains('flat')){sw.classList.remove('off');return}
+  let moving=!!camAnim,narrow=stage.clientWidth<700,enl=view!=='phone'&&view!=='note'&&(S.enlarged&&view!=='room'||narrow&&view==='screen');sw.classList.toggle('passive',view==='desk'&&!enl);
+  sw.classList.toggle('enlarged',enl);
+  if(enl){sw.classList.remove('off');sw.style.transform='';sw._m=''}
+  else{let pts=view==='room'||moving?null:projectPts([new THREE.Vector3(SCREEN.x,SCREEN.y1,SCREEN.z0),new THREE.Vector3(SCREEN.x,SCREEN.y1,SCREEN.z1),new THREE.Vector3(SCREEN.x,SCREEN.y0,SCREEN.z0),new THREE.Vector3(SCREEN.x,SCREEN.y0,SCREEN.z1)]);glue(sw,pts,840,457,(view==='screen'||view==='desk')&&!!pts)}
+  if(view==='phone'&&!moving){let l=new THREE.Vector3(),c=[[-1.325,2.75],[1.325,2.75],[-1.325,-2.75],[1.325,-2.75]].map(([x,y])=>phoneScreen.localToWorld(l.set(x,y,0.01).clone()));glue(pw,projectPts(c),260,540,true)}else pw.classList.add('off');
+  if(view==='note'&&!moving){let page=noteG.children[1],c=[[-3,4],[3,4],[-3,-4],[3,-4]].map(([x,y])=>page.localToWorld(new THREE.Vector3(x,y,.01)));glue(nw,projectPts(c),420,560,true)}else nw.classList.add('off')}
+/* ---- Pointer ---- */
+function setRay(e){let r=cv.getBoundingClientRect();ndc.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);ray.setFromCamera(ndc,camera)}
+function pickable(){let l=[monitorPlane,phoneG,noteG];if(mug)l.push(mug);return l}
+function hitKind(){let h=ray.intersectObjects(pickable(),true)[0];if(!h)return null;let o=h.object;while(o&&!o.userData.kind)o=o.parent;return o?o:null}
+function deskPoint(y=DESK_Y){let p=new THREE.Vector3();return ray.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0,1,0),-y),p)?p:null}
+function canDragPhone(){return S.phase!=='entry'&&S.phase!=='s1'&&!(S.step==='quiz'||S.step==='feedback')}
+function showOutline(o){if(!o){outline.visible=false;return}let b=new THREE.Box3().setFromObject(o),s=b.getSize(new THREE.Vector3()),c=b.getCenter(new THREE.Vector3());outline.scale.set(s.x+.6,s.y+.6,s.z+.6);outline.position.copy(c);outline.visible=true}
+cv.addEventListener('pointerdown',e=>{if(!camera)return;setRay(e);let o=hitKind();cv.setPointerCapture(e.pointerId);
+  if(o&&(o.userData.kind==='phone'||o.userData.kind==='mug')&&view==='desk'){drag={o,kind:o.userData.kind,start:[e.clientX,e.clientY],moved:false,id:e.pointerId};return}
+  if(o){drag={o,kind:o.userData.kind,start:[e.clientX,e.clientY],moved:false,click:true,id:e.pointerId};return}
+  if(view==='room')drag={orbit:true,x:e.clientX,y:e.clientY,yaw:orbit.yaw,pitch:orbit.pitch,id:e.pointerId}});
+cv.addEventListener('pointermove',e=>{if(!camera)return;setRay(e);
+  if(drag&&drag.id===e.pointerId){if(drag.orbit){orbit.yaw=Math.max(-.6,Math.min(.95,drag.yaw-(e.clientX-drag.x)*.004));orbit.pitch=Math.max(.45,Math.min(1.2,drag.pitch+(e.clientY-drag.y)*.003));return}
+    if(!drag.moved&&Math.hypot(e.clientX-drag.start[0],e.clientY-drag.start[1])>5&&!drag.click){if(drag.kind==='phone'&&!canDragPhone()){announce('The phone stays where it is during this part of the session. Select it to open it.');drag.click=true;return}drag.moved=true}
+    if(drag.moved){let p=deskPoint(DESK_Y+.9);if(p){let x=Math.max(91.5,Math.min(110.5,p.x)),z=Math.max(-185,Math.min(-70,p.z));if(drag.kind==='phone'){phoneG.position.set(x,DESK_Y+1.2,z);phoneG.rotation.set(0,0,0);phoneG.rotation.order='YXZ';phoneG.rotation.y=-Math.PI/2}else{drag.o.position.set(x,DESK_Y+(drag.kind==='mug'?.8:.8),z)}let inBox=Math.abs(x-BOX.x)<BOX.w/2&&Math.abs(z-BOX.z)<BOX.d/2;showOutline(drag.kind==='phone'&&inBox?boxG:null)}}return}
+  let o=hitKind();if(o!==hoverObj){hoverObj=o;let ok=o&&(o.userData.kind!=='monitor'||view!=='screen');showOutline(ok&&o.userData.kind!=='monitor'?o:null);cv.style.cursor=ok?'pointer':view==='room'?'grab':'default'}});
+cv.addEventListener('pointerup',e=>{if(!drag||drag.id!==e.pointerId)return;let d=drag;drag=null;outline.visible=false;
+  if(d.orbit)return;
+  if(d.moved){if(d.kind==='phone'){let p=phoneG.position,inBox=Math.abs(p.x-BOX.x)<BOX.w/2&&Math.abs(p.z-BOX.z)<BOX.d/2,onStand=Math.hypot(p.x-STAND.x,p.z-STAND.z)<3;phoneState.pose=inBox?'box':onStand?'stand':'flat';phoneState.x=p.x;phoneState.z=p.z;if(inBox)phoneState.lit=false;placePhone();drawPhoneTexture();announce('Phone '+phoneStatusText()+'.');render()}
+     else{d.o.position.y=DESK_Y+(d.kind==='note'?0:0);if(d.kind==='mug'&&S.phase==='entry'){S.tut.moved=true;render()}}return}
+  let k=d.kind;
+  if(k==='monitor'){setView('screen');return}
+  if(k==='phone'){setView('phone');renderPhone();phoneState.lit=false;drawPhoneTexture();return}
+  if(k==='note'){S.phase==='s3'&&S.step==='study'?openNotebook():setView('note');return}
+  if(k==='mug'&&view!=='desk')setView('desk')});
+cv.addEventListener('pointercancel',()=>{drag=null;outline.visible=false;placePhone()});
+
+/* ---- Tools, accessibility controls ---- */
+document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>{setView(b.dataset.view)}));
+$('enlargeBtn').onclick=()=>{S.enlarged=!S.enlarged;$('enlargeBtn').setAttribute('aria-pressed',S.enlarged);$('enlargeBtn').textContent=S.enlarged?'Show the room':'Enlarge screen';if(S.enlarged&&(view==='room'||view==='phone'||view==='note'))setView('screen');layoutGlue();updateCue()};
+$('altEnlarge').onclick=()=>{if(!S.enlarged)$('enlargeBtn').click();$('screen').querySelector('button,input,textarea,select')?.focus()};
+$('motionBtn').onclick=()=>{reduceMotion=!reduceMotion;$('motionBtn').setAttribute('aria-pressed',reduceMotion)};
+$('motionBtn').setAttribute('aria-pressed',reduceMotion);$('altMotion').onclick=()=>{$('motionBtn').click();$('altMotion').textContent=reduceMotion?'Motion reduced (select to restore)':'Reduce motion';announce(reduceMotion?'Motion reduced.':'Motion restored.')};
+$('restartBtn').onclick=()=>restart(false);
+$('fsBtn').onclick=()=>{if(document.fullscreenElement){document.exitFullscreen();return}let p=stage.requestFullscreen&&stage.requestFullscreen();if(p&&p.catch)p.catch(()=>window.open(location.href,'_blank'))};
+document.addEventListener('fullscreenchange',()=>{$('fsBtn').textContent=document.fullscreenElement?'Exit full screen':'Full screen';setTimeout(resize,50)});
+$('altPhoneOpen').onclick=()=>{if(THREEOK&&camera)setView('phone');else{$('phoneWrap').classList.toggle('off')}renderPhone();phoneState.lit=false;drawPhoneTexture()};
+$('altPhoneMove').onclick=()=>{if(!canDragPhone()){announce('The phone cannot be moved during this part of the session.');return}phoneState.pose='box';phoneState.lit=false;placePhone();drawPhoneTexture();render();announce('Phone '+phoneStatusText()+'.')};
+$('altPhoneStand').onclick=()=>{if(!canDragPhone()){announce('The phone cannot be moved during this part of the session.');return}phoneState.pose='stand';placePhone();render();announce('Phone '+phoneStatusText()+'.')};
+$('altNote').onclick=()=>{if(THREEOK&&camera){S.phase==='s3'&&S.step==='study'?openNotebook():setView('note')}else $('noteWrap').classList.toggle('off');renderNote()};
+$('altMug').onclick=()=>{if(mug){mug.position.z+=3;}if(S.phase==='entry'){S.tut.moved=true;render()}announce('The mug moved.')};
+function updateAlt(){$('altStatus').textContent=`Phone: ${phoneStatusText()}.`}
+function updateCue(){let c=$('cue');if(!THREEOK||!camera||stage.classList.contains('flat')){c.hidden=true;return}let t='';
+  if(view==='room')t='Drag to look around · Select the monitor to read';else if(view==='desk')t=canDragPhone()?'Drag the phone or the mug · Select an object to use it':'Select an object to use it · Drag the mug to try moving';else if(view==='phone'||view==='note')t='';
+  if(S.enlarged)t='';c.hidden=!t;c.textContent=t}
+function restart(skipConfirm){if(!skipConfirm&&S.phase!=='entry'&&!confirm('Restart the session? Your answers will be cleared.'))return;
+  if(S&&S.study)S.study.timers.forEach(clearTimeout);S=freshState();Object.assign(phoneState,{pose:'stand',silenced:false,lit:false,buzz:0,opened:null});placePhone();drawPhoneTexture();drawNoteTexture();if(mug&&mug.userData.home)mug.position.copy(mug.userData.home);setView('room');render();announce('Session restarted.')}
+function goFlat(){THREEOK=false;stage.classList.add('flat');stage.style.height='auto';stage.style.padding='12px';$('loading').hidden=true;cv.hidden=true;document.querySelector('.tools').hidden=true;$('cue').hidden=true;$('scrWrap').classList.remove('off');render()}
+
+/* ================= Boot ================= */
+S=freshState();
+if(THREEOK&&init3D()){if(window.THREE.GLTFLoader)loadRoom();else{$('loadMsg').textContent='The 3D loader is unavailable. The activity continues in text mode.';setTimeout(goFlat,1200)}}
+else goFlat();
+render();
+</script>
+</body>
+</html>
