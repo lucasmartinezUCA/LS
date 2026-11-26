@@ -120,7 +120,7 @@ html,body{margin:0;padding:0;background:transparent;font-family:"DM Sans",Arial,
 #plab textarea.tx{width:100%;min-height:64px;border:1px solid var(--line2);border-radius:8px;padding:7px;font-size:14px}
 #plab .small{font-size:12.5px;color:var(--muted)}
 /* Phone UI */
-#plab .phone{width:260px;height:540px;background:#101a22;color:#e9f1f5;font-size:14px;display:flex;flex-direction:column;padding:16px 12px;gap:8px;border-radius:10px}
+#plab .phone{width:260px;height:574px;border-radius:30px;background:#101a22;color:#e9f1f5;font-size:14px;display:flex;flex-direction:column;padding:16px 12px;gap:8px;border-radius:10px}
 #plab .phone .clock{font-size:46px;font-weight:300;text-align:center;line-height:1;margin-top:10px}
 #plab .phone .date{text-align:center;font-size:13px;color:#a8bcc8;margin-bottom:8px}
 #plab .phone .ntf{background:#ffffff1f;border-radius:12px;padding:8px 10px;font-size:13px}
@@ -144,7 +144,7 @@ html,body{margin:0;padding:0;background:transparent;font-family:"DM Sans",Arial,
 @container (max-width:760px){
   #plab .tools{gap:4px}
   #plab .tools button{font-size:.72rem;padding:5px 9px}
-  #plab #enlargeBtn,#plab #motionBtn{display:none}
+  #plab #enlargeBtn,#plab #motionBtn,#plab #soundBtn{display:none}
   #plab .glue.enlarged{top:84px;height:calc(100% - 84px)}
   #plab .stage{height:clamp(480px,130cqw,720px)}
   #plab .glue.enlarged .lesson,#plab .glue.enlarged .grid2,#plab .stage.flat .lesson,#plab .stage.flat .grid2{grid-template-columns:1fr}
@@ -171,6 +171,7 @@ html,body{margin:0;padding:0;background:transparent;font-family:"DM Sans",Arial,
     <button type="button" data-view="desk" id="deskBtn" hidden>Look at the desk</button>
     <button type="button" data-view="screen">Look at the screen</button>
     <button type="button" id="enlargeBtn" aria-pressed="false">Enlarge screen</button>
+    <button type="button" id="soundBtn" aria-pressed="true">Sound on</button>
     <button type="button" id="motionBtn" aria-pressed="false">Reduce motion</button>
     <button type="button" id="restartBtn">Restart</button>
     <button type="button" id="fsBtn">Full screen</button>
@@ -183,10 +184,10 @@ html,body{margin:0;padding:0;background:transparent;font-family:"DM Sans",Arial,
   <div class="row"><b style="align-self:center">Position:</b><button type="button" data-view="screen">Sit and look at the screen</button><button type="button" data-view="desk">Sit and look at the desk</button><button type="button" data-view="stand">Stand up</button><button type="button" data-view="room">Go back to the door</button><button type="button" id="altEnlarge">Show the screen enlarged</button></div>
   <div class="row"><b style="align-self:center">Phone:</b><button type="button" id="altPhoneOpen">Open the phone</button><button type="button" id="altPhoneMove">Put the phone in the storage box</button><button type="button" id="altPhoneStand">Return the phone to its stand</button></div>
   <div class="row"><b style="align-self:center">Notebook:</b><button type="button" id="altNote">Open the notebook</button></div>
-  <div class="row"><b style="align-self:center">Tutorial:</b><button type="button" id="altMug">Move the mug</button><b style="align-self:center;margin-left:10px">Motion:</b><button type="button" id="altMotion">Reduce motion</button></div>
+  <div class="row"><b style="align-self:center">Tutorial:</b><button type="button" id="altMug">Move the mug</button><b style="align-self:center;margin-left:10px">Sound:</b><button type="button" id="altSound">Turn sound off</button><b style="align-self:center;margin-left:10px">Motion:</b><button type="button" id="altMotion">Reduce motion</button></div>
   <p id="altStatus" class="small"></p>
 </details>
-<div class="foot"><span>Formative learning activity · No time limit · No automatic submission to the LMS</span><span>Room model: <a href="https://sketchfab.com/3d-models/workroomstudyroom-657ee9bf11734f65a25b1f31a44ef71d" target="_blank" rel="noopener">workroom/study/room</a> by <a href="https://sketchfab.com/mrdt.club" target="_blank" rel="noopener">MrdT</a>, <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>. Changes: compressed textures and geometry, brand logo covered, original phone replaced, phone, stand, notebook and storage box added.</span></div>
+<div class="foot"><span>Formative learning activity · No time limit · No automatic submission to the LMS</span><span>Room model: <a href="https://sketchfab.com/3d-models/workroomstudyroom-657ee9bf11734f65a25b1f31a44ef71d" target="_blank" rel="noopener">workroom/study/room</a> by <a href="https://sketchfab.com/mrdt.club" target="_blank" rel="noopener">MrdT</a>, <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>. Changes: compressed textures and geometry, brand logo covered, original phone replaced; stand, notebook and storage box added.</span><span>Phone model: <a href="https://sketchfab.com/3d-models/smartphone-793ce4333ddb4cb8ab30c6b1da96df81" target="_blank" rel="noopener">Smartphone</a> by <a href="https://sketchfab.com/Naudaff3D" target="_blank" rel="noopener">Naudaff3D</a>, CC BY 4.0, compressed, screen replaced by the activity’s interface. Notification sound: Universfield.</span></div>
 <div id="live" class="sr" aria-live="polite" aria-atomic="true"></div>
 </section>
 <script>
@@ -461,8 +462,10 @@ function beginStudy(){let i=sIdx(),ses=cur();ses.cfg=JSON.parse(JSON.stringify(S
   announce(`Studying: ${L.title}. Select Finish studying when you are done.`)}
 function finishStudy(){S.study.timers.forEach(clearTimeout);if('speechSynthesis'in window)speechSynthesis.cancel();let ses=cur();ses.phone=phoneSnapshot();if(sIdx()===2){ses.direct={hl:[...S.direct.hl],arrows:S.direct.arrows.slice(),note:S.direct.note}}
   phoneState.lit=false;drawPhoneTexture();S.step='quiz';setView('screen');render();announce('The material is hidden. Answer the three questions.')}
-function phoneNotify(n){if(S.step!=='study')return;let ses=cur();ses.ntfArrived++;S.study.ntf.push(n);let ph=phoneSnapshot();
+function phoneNotify(n){if(S.step!=='study')return;let ses=cur();ses.ntfArrived++;S.study.ntf.push(n);let ph=phoneSnapshot();playNotif(ph);
   if(!ph.silenced&&ph.pose!=='box'){ses.ntfShown++;phoneState.lit=true;phoneState.buzz=1;phoneState.lastNtf=n;drawPhoneTexture();updateCue()}}
+const notifSound=new Audio('notification.mp3');notifSound.preload='auto';let soundOn=true;
+function playNotif(ph){if(!soundOn||ph.silenced)return;try{notifSound.currentTime=0;notifSound.volume=ph.pose==='box'?.3:1;let p=notifSound.play();if(p&&p.catch)p.catch(()=>{})}catch(e){}}
 function phoneStatusText(){let p=phoneSnapshot();return p.pose==='box'?'in the storage box':`${p.silenced?'silenced':'notifications on'}, ${p.pose==='stand'?'on its stand next to the monitor':p.away?'away from your reading position':'on the desk near you'}`}
 
 /* ================= Phone, notebook DOM ================= */
@@ -531,9 +534,14 @@ function loadRoom(){
     chairProxy=new THREE.Mesh(new THREE.BoxGeometry(24,40,28),ghostM);chairProxy.position.set(93,27,-119);chairProxy.userData={kind:'chair'};scene.add(chairProxy);
     /* Cover the brand logo on the monitor chin with the monitor's own silver finish */
     let cover=new THREE.Mesh(new THREE.PlaneGeometry(2.2,1.5),silver?silver.clone():new THREE.MeshStandardMaterial({color:0xb8b8b8,roughness:.4,metalness:.3}));cover.position.set(104.12,41.75,-126.5);cover.rotation.y=-Math.PI/2;scene.add(cover);
+    loadPhoneModel();
     $('loading').hidden=true;setView('room',true);render()},
    x=>{if(x.total){$('prog').value=Math.round(x.loaded/x.total*100)}},
    err=>{$('loadMsg').textContent='The 3D room could not be loaded. The activity continues in text mode.';setTimeout(()=>{$('loading').hidden=true;goFlat()},1400)})}
+function loadPhoneModel(){let l=new THREE.GLTFLoader();if(window.MeshoptDecoder)l.setMeshoptDecoder(MeshoptDecoder);
+  l.load('phone.glb',g=>{let m=g.scene,w=new THREE.Group();m.position.set(-.1,-2.3965,.03);w.add(m);w.rotation.x=-Math.PI/2;w.scale.setScalar(1.232);
+    m.traverse(o=>{if(o.isMesh){o.raycast=()=>{};if(o.material&&o.material.name==='Lock_Screen')o.visible=false}});
+    let b=phoneG.userData.body;b.material=new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false});phoneG.add(w)},undefined,()=>{})}
 function buildProps(){
   /* Monitor screen plane (texture used when the live screen is not shown) */
   [monCtx,monTex]=canvasTex(1024,542);
@@ -543,8 +551,8 @@ function buildProps(){
   let std=(c,o={})=>new THREE.MeshStandardMaterial({color:c,roughness:.5,metalness:.1,...o});
   stand=new THREE.Group();let sb=new THREE.Mesh(new THREE.BoxGeometry(3.2,.35,3.4),std(0x3b4650,{metalness:.5}));sb.position.y=.18;stand.add(sb);let sback=new THREE.Mesh(new THREE.BoxGeometry(.35,4.2,2.6),std(0x3b4650,{metalness:.5}));sback.position.set(1.1,2.1,0);sback.rotation.z=-.28;stand.add(sback);stand.position.set(STAND.x+.6,DESK_Y,STAND.z);scene.add(stand);
   phoneG=new THREE.Group();let body=new THREE.Mesh(new THREE.BoxGeometry(2.95,.32,5.9),std(0x1c242b,{roughness:.35,metalness:.4}));phoneG.add(body);
-  [phoneCtx,phoneTex]=canvasTex(256,512);phoneScreen=new THREE.Mesh(new THREE.PlaneGeometry(2.65,5.5),new THREE.MeshBasicMaterial({map:phoneTex,toneMapped:false}));phoneScreen.rotation.x=-Math.PI/2;phoneScreen.position.y=.165;phoneG.add(phoneScreen);
-  phoneG.userData={kind:'phone',r:3.5};scene.add(phoneG);
+  [phoneCtx,phoneTex]=canvasTex(256,564);phoneScreen=new THREE.Mesh(new THREE.PlaneGeometry(2.52,5.56),new THREE.MeshBasicMaterial({map:phoneTex,toneMapped:false,transparent:true}));phoneScreen.rotation.x=-Math.PI/2;phoneScreen.position.y=.162;phoneG.add(phoneScreen);phoneG.userData.body=body;
+  phoneG.userData={kind:'phone',r:3.5,body};scene.add(phoneG);
   /* Storage box */
   boxG=new THREE.Group();let wood=std(0xa8865f,{roughness:.8});let base=new THREE.Mesh(new THREE.BoxGeometry(BOX.w,.3,BOX.d),wood);base.position.y=.15;boxG.add(base);
   [[0,BOX.d/2-.15,BOX.w,.3],[0,-BOX.d/2+.15,BOX.w,.3],[BOX.w/2-.15,0,.3,BOX.d],[-BOX.w/2+.15,0,.3,BOX.d]].forEach(([x,z,w,d])=>{let m=new THREE.Mesh(new THREE.BoxGeometry(w,2.4,d),wood);m.position.set(x,1.2,z);boxG.add(m)});
@@ -559,7 +567,7 @@ function placePhone(){let p=phoneState;if(!phoneG)return;
   if(p.pose==='stand'){phoneG.position.set(STAND.x,DESK_Y+3.05,STAND.z);phoneG.rotation.set(0,0,0);phoneG.rotation.order='YXZ';phoneG.rotation.y=-Math.PI/2;phoneG.rotation.x=1.29}
   else if(p.pose==='box'){phoneG.position.set(BOX.x,DESK_Y+.48,BOX.z);phoneG.rotation.set(0,0,0);phoneG.rotation.order='YXZ';phoneG.rotation.y=-Math.PI/2+.3}
   else{phoneG.position.set(p.x,DESK_Y+.17,p.z);phoneG.rotation.set(0,0,0);phoneG.rotation.order='YXZ';phoneG.rotation.y=-Math.PI/2}}
-function drawPhoneTexture(){if(!phoneCtx)return;let g=phoneCtx,p=phoneState;g.fillStyle=p.lit&&!p.silenced?'#20384a':'#0b1015';g.fillRect(0,0,256,512);
+function drawPhoneTexture(){if(!phoneCtx)return;let g=phoneCtx,p=phoneState;g.clearRect(0,0,256,564);g.fillStyle=p.lit&&!p.silenced?'#20384a':'#0b1015';g.beginPath();g.roundRect(0,0,256,564,30);g.fill();
   if(p.lit&&!p.silenced){g.fillStyle='#ffffff';g.font='300 58px Arial';g.textAlign='center';g.fillText('9:41',128,120);g.fillStyle='#ffffff2a';g.beginPath();g.roundRect(18,180,220,96,18);g.fill();g.fillStyle='#cfe0ea';g.font='700 22px Arial';g.textAlign='left';g.fillText(p.lastNtf?p.lastNtf[0]:'',34,220);g.fillStyle='#fff';g.font='20px Arial';g.fillText('New message',34,254)}
   else if(p.silenced){g.fillStyle='#cfaa65';g.font='700 40px Arial';g.textAlign='center';g.fillText('☾',128,270)}
   phoneTex.needsUpdate=true}
@@ -576,7 +584,7 @@ function fwd(yaw,pitch){return new THREE.Vector3(Math.cos(pitch)*Math.cos(yaw),M
 function seatPos(){return new THREE.Vector3(SCREEN.x-26.6,47.6,-124.7)}
 function pose(pos,yaw,pitch,fov){return{pos:pos.clone(),tgt:pos.clone().add(fwd(yaw,pitch)),yaw,pitch,fov}}
 const VIEWS={
-  phone:()=>{let p=phoneScreen.getWorldPosition(new THREE.Vector3()),q=phoneScreen.getWorldQuaternion(new THREE.Quaternion()),n=new THREE.Vector3(0,0,1).applyQuaternion(q);let a=camera.aspect,d=Math.max(7.4,(a<1?5.2/a:0)+3);return{pos:p.clone().add(n.multiplyScalar(d)),tgt:p,fov:42,up:new THREE.Vector3(0,1,0).applyQuaternion(q)}},
+  phone:()=>{let p=phoneScreen.getWorldPosition(new THREE.Vector3()),q=phoneScreen.getWorldQuaternion(new THREE.Quaternion()),n=new THREE.Vector3(0,0,1).applyQuaternion(q);let a=camera.aspect,d=Math.max(9,(a<1?5.6/a:0)+3.4);return{pos:p.clone().add(n.multiplyScalar(d)),tgt:p,fov:42,up:new THREE.Vector3(0,1,0).applyQuaternion(q)}},
   note:()=>{let p=noteG.getWorldPosition(new THREE.Vector3());let a=camera.aspect,d=Math.max(12.5,a<1?10/a:0);return{pos:new THREE.Vector3(p.x-.01,p.y+d,p.z),tgt:p,fov:42,up:new THREE.Vector3(1,0,0)}}};
 function setView(v,instant){if(!THREEOK||!camera){view=v==='phone'||v==='note'?v:'seat';layoutGlue();return}
   let goal;
@@ -620,7 +628,7 @@ function layoutGlue(){if(!S)return;let sw=$('scrWrap'),pw=$('phoneWrap'),nw=$('n
   sw.classList.toggle('enlarged',enl);
   if(enl){sw.classList.remove('off');sw.style.transform='';sw._m=''}
   else{let pts=!facing?null:projectPts([new THREE.Vector3(SCREEN.x,SCREEN.y1,SCREEN.z0),new THREE.Vector3(SCREEN.x,SCREEN.y1,SCREEN.z1),new THREE.Vector3(SCREEN.x,SCREEN.y0,SCREEN.z0),new THREE.Vector3(SCREEN.x,SCREEN.y0,SCREEN.z1)]);glue(sw,pts,840,444,!!pts)}
-  if(view==='phone'&&!moving){let l=new THREE.Vector3(),c=[[-1.325,2.75],[1.325,2.75],[-1.325,-2.75],[1.325,-2.75]].map(([x,y])=>phoneScreen.localToWorld(l.set(x,y,0.01).clone()));glue(pw,projectPts(c),260,540,true)}else pw.classList.add('off');
+  if(view==='phone'&&!moving){let l=new THREE.Vector3(),c=[[-1.26,2.78],[1.26,2.78],[-1.26,-2.78],[1.26,-2.78]].map(([x,y])=>phoneScreen.localToWorld(l.set(x,y,0.01).clone()));glue(pw,projectPts(c),260,574,true)}else pw.classList.add('off');
   if(view==='note'&&!moving){let page=noteG.children[1],c=[[-3,4],[3,4],[-3,-4],[3,-4]].map(([x,y])=>page.localToWorld(new THREE.Vector3(x,y,.01)));glue(nw,projectPts(c),420,560,true)}else nw.classList.add('off')}
 /* ---- Pointer and keyboard ---- */
 function setRay(e){let r=cv.getBoundingClientRect();ndc.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);ray.setFromCamera(ndc,camera)}
@@ -659,6 +667,8 @@ $('enlargeBtn').onclick=()=>{S.enlarged=!S.enlarged;$('enlargeBtn').setAttribute
 $('altEnlarge').onclick=()=>{if(!S.enlarged)$('enlargeBtn').click();$('screen').querySelector('button,input,textarea,select')?.focus()};
 $('motionBtn').onclick=()=>{reduceMotion=!reduceMotion;$('motionBtn').setAttribute('aria-pressed',reduceMotion)};
 $('motionBtn').setAttribute('aria-pressed',reduceMotion);$('altMotion').onclick=()=>{$('motionBtn').click();$('altMotion').textContent=reduceMotion?'Motion reduced (select to restore)':'Reduce motion';announce(reduceMotion?'Motion reduced.':'Motion restored.')};
+function setSound(on){soundOn=on;$('soundBtn').setAttribute('aria-pressed',on);$('soundBtn').textContent=on?'Sound on':'Sound off';$('altSound').textContent=on?'Turn sound off':'Turn sound on';announce(on?'Sound on.':'Sound off.')}
+$('soundBtn').onclick=()=>setSound(!soundOn);$('altSound').onclick=()=>setSound(!soundOn);
 $('restartBtn').onclick=()=>restart(false);
 $('fsBtn').onclick=()=>{if(document.fullscreenElement){document.exitFullscreen();return}let p=stage.requestFullscreen&&stage.requestFullscreen();if(p&&p.catch)p.catch(()=>window.open(location.href,'_blank'))};
 document.addEventListener('fullscreenchange',()=>{$('fsBtn').textContent=document.fullscreenElement?'Exit full screen':'Full screen';setTimeout(resize,50)});
